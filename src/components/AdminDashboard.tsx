@@ -352,30 +352,19 @@ const AdminDashboard: React.FC = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      // Offline/fallback login without hitting Supabase (avoids 400s)
+      // Simple password-based login without Supabase auth
       if (password === ADMIN_PASSWORD) {
         setIsAuthenticated(true);
         localStorage.setItem('peptide_admin_auth', 'true');
         setLoginError('');
+        setLoginLoading(false);
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password,
-      });
-
-      if (error) {
-        setLoginError('Invalid admin credentials');
-        return;
-      }
-
-      setIsAuthenticated(true);
-      localStorage.setItem('peptide_admin_auth', 'true');
-      setLoginError('');
-    } catch (err) {
-      console.error('Admin login failed:', err);
-      setLoginError('Unable to sign in. Please try again.');
+      setLoginError('Invalid admin credentials');
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError('Login failed. Please try again.');
     } finally {
       setLoginLoading(false);
     }
