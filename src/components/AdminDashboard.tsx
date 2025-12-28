@@ -8,7 +8,7 @@ import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import VariationManager from './VariationManager';
 import COAManager from './COAManager';
-import PeptideInventoryManager from './PeptideInventoryManager';
+import PulseInventoryManager from './PeptideInventoryManager';
 import OrdersManager from './OrdersManager';
 import FAQManager from './FAQManager';
 import ShippingManager from './ShippingManager';
@@ -17,6 +17,7 @@ import PromoCodeManager from './PromoCodeManager';
 import GuideManager from './GuideManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
 import { Calendar, BarChart3 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('peptide_admin_auth') === 'true';
@@ -28,6 +29,7 @@ const AdminDashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'products' | 'add' | 'edit' | 'categories' | 'payments' | 'inventory' | 'orders' | 'shipping' | 'coa' | 'faq' | 'settings' | 'promo-codes' | 'guides' | 'analytics'>('dashboard');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
   const [managingVariationsProductId, setManagingVariationsProductId] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -342,14 +344,40 @@ const AdminDashboard: React.FC = () => {
     count: products.filter(p => p.category === cat.id).length
   }));
 
-  const handleLogin = (e: React.FormEvent) => {
+  const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@studypulse.com';
+  const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@123';
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'Slimdose@Admin!2025') {
+    setLoginError('');
+    setLoginLoading(true);
+    try {
+      // Offline/fallback login without hitting Supabase (avoids 400s)
+      if (password === ADMIN_PASSWORD) {
+        setIsAuthenticated(true);
+        localStorage.setItem('peptide_admin_auth', 'true');
+        setLoginError('');
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email: ADMIN_EMAIL,
+        password,
+      });
+
+      if (error) {
+        setLoginError('Invalid admin credentials');
+        return;
+      }
+
       setIsAuthenticated(true);
       localStorage.setItem('peptide_admin_auth', 'true');
       setLoginError('');
-    } else {
-      setLoginError('Invalid password');
+    } catch (err) {
+      console.error('Admin login failed:', err);
+      setLoginError('Unable to sign in. Please try again.');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -374,8 +402,8 @@ const AdminDashboard: React.FC = () => {
           <div className="text-center mb-6">
             <div className="relative mx-auto w-16 h-16 rounded-full overflow-hidden mb-4 border-2 border-theme-accent/30">
               <img
-                src="/assets/logo.jpeg"
-                alt="SlimDose Peptides"
+                src="/logoo.jpg"
+                alt="StudyPulse"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -1059,7 +1087,7 @@ const AdminDashboard: React.FC = () => {
 
   // Inventory View
   if (currentView === 'inventory') {
-    return <PeptideInventoryManager onBack={() => setCurrentView('dashboard')} />;
+    return <PulseInventoryManager onBack={() => setCurrentView('dashboard')} />;
   }
 
   // Orders View
@@ -1156,18 +1184,14 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-9 h-9 rounded-full overflow-hidden border border-navy-900/20">
                   <img
-                    src="/assets/logo.jpeg"
-                    alt="SlimDose Peptides"
+                    src="/logoo.jpg"
+                    alt="StudyPulse"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h1 className="text-base font-bold text-theme-text">
-                    SlimDose Peptides
-                  </h1>
-                  <p className="text-xs text-gray-500">
-                    Admin Dashboard
-                  </p>
+                  <p className="text-sm font-semibold text-navy-900">StudyPulse</p>
+                  <p className="text-xs text-gray-500">Admin Dashboard</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3">
@@ -1311,7 +1335,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="p-1.5 bg-orange-50 rounded-lg">
                     <Warehouse className="h-4 w-4 text-orange-600" />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Peptide Inventory</span>
+                  <span className="text-sm font-medium text-gray-700">Pulse Inventory</span>
                 </button>
                 <button
                   onClick={() => setCurrentView('orders')}
@@ -1366,15 +1390,6 @@ const AdminDashboard: React.FC = () => {
                     <Tag className="h-4 w-4 text-green-700" />
                   </div>
                   <span className="text-sm font-medium text-gray-900">Promo Codes</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('guides')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-purple-50 rounded-lg">
-                    <BookOpen className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Peptalk</span>
                 </button>
                 <button
                   onClick={() => setCurrentView('settings')}

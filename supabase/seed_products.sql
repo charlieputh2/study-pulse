@@ -75,9 +75,9 @@ INSERT INTO public.categories (id, name, sort_order, icon, active) VALUES
 -- Seed Products with Fixed IDs for Variation Linking
 INSERT INTO public.products (id, name, description, base_price, category, image_url, featured, available, stock_quantity) VALUES
 -- Weight Management
-('d0a80121-7ac0-4e78-94f8-585d77059201', 'SlimDose 10mg', 'Premium weight management peptide solution. Laboratory tested for purity.', 2500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
-('d0a80121-7ac0-4e78-94f8-585d77059202', 'SlimDose 20mg', 'Double strength weight management formula. Enhanced potency.', 3500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
-('d0a80121-7ac0-4e78-94f8-585d77059203', 'SlimDose 30mg', 'Maximum strength weight management solution. Advanced formula.', 4500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
+('d0a80121-7ac0-4e78-94f8-585d77059201', 'Study Pulse 10mg', 'Premium weight management peptide solution. Laboratory tested for purity.', 2500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
+('d0a80121-7ac0-4e78-94f8-585d77059202', 'Study Pulse 20mg', 'Double strength weight management formula. Enhanced potency.', 3500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
+('d0a80121-7ac0-4e78-94f8-585d77059203', 'Study Pulse 30mg', 'Maximum strength weight management solution. Advanced formula.', 4500.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
 ('d0a80121-7ac0-4e78-94f8-585d77059204', 'RetaDose 10mg', 'Next generation GLP-1/GIP/Glucagon agonist.', 3800.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, true, true, 1),
 ('d0a80121-7ac0-4e78-94f8-585d77059205', 'RetaDose 20mg', 'High potency RetaDose for advanced protocols.', 4800.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, false, true, 1),
 ('d0a80121-7ac0-4e78-94f8-585d77059206', 'LipoLemon 10ml', 'Lipolytic solution for targeted fat reduction.', 1900.00, 'c0a80121-7ac0-4e78-94f8-585d77059123', NULL, false, true, 1),

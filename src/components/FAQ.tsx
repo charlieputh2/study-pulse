@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, FlaskConical, Package, CreditCard, Truck, ArrowLeft, MessageCircle, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, FlaskConical, Package, CreditCard, Truck, ArrowLeft, Send, HelpCircle } from 'lucide-react';
 import { useFAQs } from '../hooks/useFAQs';
 
 const categoryIcons: { [key: string]: React.ReactElement } = {
@@ -7,13 +7,6 @@ const categoryIcons: { [key: string]: React.ReactElement } = {
     'ORDERING & PACKAGING': <Package className="w-5 h-5" />,
     'PAYMENT METHODS': <CreditCard className="w-5 h-5" />,
     'SHIPPING & DELIVERY': <Truck className="w-5 h-5" />,
-};
-
-const categoryColors: { [key: string]: string } = {
-    'PRODUCT & USAGE': 'text-navy-900 border-navy-900 bg-gold-50/50',
-    'ORDERING & PACKAGING': 'text-navy-900 border-navy-900 bg-gold-50/50',
-    'PAYMENT METHODS': 'text-navy-900 border-navy-900 bg-gold-50/50',
-    'SHIPPING & DELIVERY': 'text-navy-900 border-navy-900 bg-gold-50/50',
 };
 
 const FAQ: React.FC = () => {
@@ -37,7 +30,7 @@ const FAQ: React.FC = () => {
         ? faqs.filter(faq => faq.category === activeCategory)
         : faqs;
 
-    const whatsappUrl = `https://wa.me/639062349763?text=${encodeURIComponent('Hi! I have a question about your products.')}`;
+    const telegramUrl = 'https://t.me/+9jU8Q-FgVms5NjA1?fbclid=IwY2xjawO9-AZleHRuA2FlbQIxMABicmlkETE3UTRaaTlnWWtybmFHUmk0c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHoAHCIZXlUTXQo_N4JcXqhl4Vhr2QMV7i8hGSy8xK5Aj41j0Q9-jGc0oOgrY_aem_-joyjDXQFn63ofL_EP4cOQ';
 
     if (loading) {
         return (
@@ -148,16 +141,16 @@ const FAQ: React.FC = () => {
                         Still have questions?
                     </h3>
                     <p className="text-gray-600 mb-6">
-                        We're here to help! Reach out to us via WhatsApp for quick assistance.
+                        We're here to help! Reach out to us via Telegram for quick assistance.
                     </p>
                     <a
-                        href={whatsappUrl}
+                        href={telegramUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-navy-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-navy-800 transition-colors shadow-md hover:shadow-lg"
+                        className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg"
                     >
-                        <MessageCircle className="w-5 h-5 text-gold-400" />
-                        Chat on WhatsApp
+                        <Send className="w-5 h-5" />
+                        Chat on Telegram
                     </a>
                 </div>
             </div>

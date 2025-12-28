@@ -284,7 +284,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       });
 
       const orderDetails = `
-✨SlimDose Peptides - NEW ORDER
+✨Study Pulse - NEW ORDER
 
 📅 ORDER DATE & TIME
 ${dateTimeStamp}
@@ -325,7 +325,7 @@ ${paymentMethod ? `Account: ${paymentMethod.account_number}` : ''}
 ${paymentProofUrl ? 'Screenshot attached to order.' : 'Pending'}
 
 📱 CONTACT METHOD
-Messenger: https://m.me/SlimDosePeptides
+Messenger: https://m.me/StudyPulse
 
 📋 ORDER ID: ${orderData.id}
 
@@ -1000,7 +1000,7 @@ Please confirm this order. Thank you!
                     <MessageCircle className="w-6 h-6 text-gold-600" />
                     <div className="text-left">
                       <p className="font-semibold text-navy-900">Messenger</p>
-                      <p className="text-sm text-gray-500">SlimDose Peptides</p>
+                      <p className="text-sm text-gray-500">Study Pulse</p>
                     </div>
                   </div>
                   {contactMethod === 'messenger' && (

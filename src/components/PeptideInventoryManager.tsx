@@ -5,11 +5,11 @@ import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
 import { supabase } from '../lib/supabase';
 
-interface PeptideInventoryManagerProps {
+interface PulseInventoryManagerProps {
   onBack: () => void;
 }
 
-const PeptideInventoryManager: React.FC<PeptideInventoryManagerProps> = ({ onBack }) => {
+const PulseInventoryManager: React.FC<PulseInventoryManagerProps> = ({ onBack }) => {
   const { products, loading, refreshProducts, deleteProduct, deleteVariation } = useMenu();
   const { categories } = useCategories();
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,9 +38,7 @@ const PeptideInventoryManager: React.FC<PeptideInventoryManagerProps> = ({ onBac
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('total_price, shipping_fee, order_items, order_status')
-        .in('order_status', ['confirmed', 'processing', 'shipped', 'delivered'])
-        .eq('payment_status', 'paid');
+        .select('total_price, order_items');
 
       if (error) throw error;
       setOrders(data || []);
@@ -54,7 +52,7 @@ const PeptideInventoryManager: React.FC<PeptideInventoryManagerProps> = ({ onBac
   const stats = useMemo(() => {
     // Calculate total sales from confirmed/paid orders
     const totalSales = orders.reduce((sum, order) => {
-      const orderTotal = Number(order.total_price) + (Number(order.shipping_fee) || 0);
+      const orderTotal = Number(order.total_price);
       return sum + orderTotal;
     }, 0);
 
@@ -254,7 +252,7 @@ const PeptideInventoryManager: React.FC<PeptideInventoryManagerProps> = ({ onBac
                 <span className="text-xs md:text-sm">Dashboard</span>
               </button>
               <h1 className="text-sm md:text-base font-bold text-navy-900">
-                Peptide Inventory
+                Pulse Inventory
               </h1>
             </div>
             <button
@@ -613,4 +611,4 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({ product, categori
   );
 };
 
-export default PeptideInventoryManager;
+export default PulseInventoryManager;

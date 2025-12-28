@@ -63,7 +63,7 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
 
   return (
-    <div className="bg-white h-full flex flex-col group relative border-2 border-navy-900 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="bg-white h-full flex flex-col group relative border border-gray-200 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
       {/* Click overlay for product details */}
       <div
         onClick={() => onProductClick?.(product)}
@@ -72,12 +72,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       />
 
       {/* Product Image */}
-      <div className="relative h-48 bg-gray-50 overflow-hidden rounded-t-xl">
+      <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden rounded-t-xl">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 p-4"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -88,12 +88,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
           {product.featured && (
-            <span className="badge badge-accent">
+            <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
               Featured
             </span>
           )}
           {hasDiscount && (
-            <span className="badge bg-theme-secondary text-white">
+            <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 text-xs font-bold rounded-full shadow-lg">
               {Math.round((1 - currentPrice / originalPrice) * 100)}% OFF
             </span>
           )}
@@ -110,12 +110,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
       </div>
 
       {/* Product Details */}
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="font-semibold text-theme-text mb-1 line-clamp-2">{product.name}</h3>
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2 min-h-[2.5rem]">{product.description}</p>
+      <div className="p-5 flex-1 flex flex-col bg-gradient-to-b from-white to-gray-50">
+        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{product.name}</h3>
+        <p className="text-sm text-gray-600 mb-4 line-clamp-3 min-h-[3rem] leading-relaxed">{product.description}</p>
 
         {/* Variations (Sizes) */}
-        <div className="mb-4 min-h-[4rem]">
+        <div className="mb-5 min-h-[3rem]">
           {product.variations && product.variations.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {product.variations.slice(0, 3).map((variation) => {
@@ -131,12 +131,12 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                     }}
                     disabled={isOutOfStock}
                     className={`
-                      px-2 py-1 text-xs rounded border transition-colors relative z-20
+                      px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all duration-200 relative z-20 shadow-sm
                       ${selectedVariation?.id === variation.id && !isOutOfStock
-                        ? 'bg-navy-900 text-white border-navy-900'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
                         : isOutOfStock
-                          ? 'bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-navy-900'
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                       }
                     `}
                   >
@@ -145,8 +145,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                 );
               })}
               {product.variations.length > 3 && (
-                <span className="text-xs text-gray-400 self-center">
-                  +{product.variations.length - 3}
+                <span className="text-xs text-gray-500 self-center bg-gray-100 px-2 py-1 rounded-full">
+                  +{product.variations.length - 3} more
                 </span>
               )}
             </div>

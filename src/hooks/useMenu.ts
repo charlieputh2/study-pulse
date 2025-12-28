@@ -109,11 +109,11 @@ export function useMenu() {
 
       // Force fresh data by clearing any potential cache
       const timestamp = Date.now();
+      // Use flexible selection to avoid schema mismatches across environments
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, description, category, base_price, discount_price, discount_start_date, discount_end_date, discount_active, purity_percentage, molecular_weight, cas_number, sequence, storage_conditions, inclusions, stock_quantity, available, featured, image_url, safety_sheet_url, created_at, updated_at')
-        .eq('available', true)
-        .order('featured', { ascending: false })
+        .select('*')
+        .eq('active', true)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -147,6 +147,16 @@ export function useMenu() {
       // Fetch variations for each product
       const productsWithVariations = await Promise.all(
         (data || []).map(async (product) => {
+          // Normalize legacy/new column names
+          const normalizedProduct: any = {
+            ...product,
+            category: (product as any).category_id ?? (product as any).category ?? null,
+            base_price: (product as any).base_price ?? (product as any).price ?? 0,
+            discount_price: (product as any).discount_price ?? (product as any).sale_price ?? null,
+            available: (product as any).available ?? (product as any).active ?? true,
+            featured: (product as any).featured ?? (product as any).is_featured ?? false,
+          };
+
           const { data: variations } = await supabase
             .from('product_variations')
             .select('*')
@@ -163,7 +173,7 @@ export function useMenu() {
           }
 
           return {
-            ...product,
+            ...normalizedProduct,
             variations: variations || []
           };
         })
@@ -182,10 +192,12 @@ export function useMenu() {
 
   const addProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Ensure image_url is explicitly included
+      // Ensure image_url is explicitly included and provide both price fields
       const productData: any = {
         ...product,
         image_url: product.image_url !== undefined ? product.image_url : null,
+        price: product.base_price || 0, // Map base_price to price field
+        base_price: product.base_price || 0, // Keep base_price as well
       };
 
       console.log('📤 Adding product to database:', { name: productData.name, image_url: productData.image_url });

@@ -53,10 +53,11 @@ const COAManager: React.FC<COAManagerProps> = ({ onBack }) => {
         .from('site_settings')
         .select('value')
         .eq('id', 'coa_page_enabled')
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
-      setCoaPageEnabled(data?.value === 'true' || data?.value === true || !data);
+      const rawValue = data?.value;
+      setCoaPageEnabled(rawValue === 'true' || rawValue === true || !data);
     } catch (error) {
       console.error('Error fetching COA page setting:', error);
       // Default to enabled if setting doesn't exist
@@ -228,7 +229,7 @@ const COAManager: React.FC<COAManagerProps> = ({ onBack }) => {
       verification_key: '',
       image_url: '/coa/',
       featured: false,
-      manufacturer: 'SlimDose Peptides',
+      manufacturer: 'Study Pulse Peptides',
       laboratory: 'Janoshik Analytical',
     });
   };

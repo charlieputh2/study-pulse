@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 
 export interface Category {
   id: string;
+  slug?: string;
   name: string;
   icon: string;
   sort_order: number;
@@ -44,6 +45,7 @@ export const useCategories = () => {
         .from('categories')
         .insert({
           id: category.id,
+          slug: category.slug ?? category.id,
           name: category.name,
           icon: category.icon,
           sort_order: category.sort_order,
@@ -57,7 +59,12 @@ export const useCategories = () => {
       await fetchCategories();
       return data;
     } catch (err) {
+      const message =
+        err && typeof err === 'object' && 'message' in err
+          ? (err as any).message
+          : 'Error adding category';
       console.error('Error adding category:', err);
+      setError(message);
       throw err;
     }
   };

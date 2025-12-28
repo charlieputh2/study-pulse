@@ -166,8 +166,8 @@ export const usePaymentMethods = () => {
         .from('payment_methods')
         .update(updatePayload)
         .eq('id', id)
-        .select('*, qr_code_url') // Explicitly include qr_code_url in response
-        .single();
+        .select('*, qr_code_url')
+        .maybeSingle();
 
       if (updateError) {
         console.error('❌ Supabase update error:', updateError);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, FlaskConical, Sparkles, Leaf, Package } from 'lucide-react';
+import { Grid, FlaskConical, Sparkles, Leaf, Package, Flame, Zap, Brain, HeartPulse, Activity, Shield, Infinity, Droplets } from 'lucide-react';
 import { useCategories } from '../hooks/useCategories';
 
 interface SubNavProps {
@@ -13,10 +13,36 @@ const iconMap: { [key: string]: React.ReactElement } = {
   Sparkles: <Sparkles className="w-5 h-5" />,
   Leaf: <Leaf className="w-5 h-5" />,
   Package: <Package className="w-5 h-5" />,
+  Flame: <Flame className="w-5 h-5" />,
+  Zap: <Zap className="w-5 h-5" />,
+  Brain: <Brain className="w-5 h-5" />,
+  HeartPulse: <HeartPulse className="w-5 h-5" />,
+  Activity: <Activity className="w-5 h-5" />,
+  Shield: <Shield className="w-5 h-5" />,
+  Infinity: <Infinity className="w-5 h-5" />,
+  Droplets: <Droplets className="w-5 h-5" />,
 };
 
 const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick }) => {
   const { categories, loading } = useCategories();
+
+  // Fallback categories aligned to requested taxonomy when DB is empty
+  const fallbackCategories = [
+    { id: 'metabolic', name: 'Metabolic & Weight Mgmt', icon: 'Flame' },
+    { id: 'energy', name: 'Energy', icon: 'Zap' },
+    { id: 'beauty', name: 'Beauty & Anti-aging', icon: 'Sparkles' },
+    { id: 'cognitive', name: 'Cognitive Support', icon: 'Brain' },
+    { id: 'hormonal', name: 'Hormonal & Sexual', icon: 'HeartPulse' },
+    { id: 'muscle', name: 'Muscle & Growth', icon: 'Activity' },
+    { id: 'antioxidant', name: 'Antioxidant', icon: 'Shield' },
+    { id: 'longevity', name: 'Longevity', icon: 'Infinity' },
+    { id: 'recovery', name: 'Injury Recovery', icon: 'Shield' },
+    { id: 'anti-inflammatory', name: 'Anti-inflammatory', icon: 'Droplets' },
+    { id: 'special-blends', name: 'Special Blends', icon: 'FlaskConical' },
+    { id: 'topicals', name: 'Topicals', icon: 'Package' },
+  ];
+
+  const displayCategories = categories.length > 0 ? categories : fallbackCategories;
 
   if (loading) {
     return (
@@ -33,10 +59,10 @@ const SubNav: React.FC<SubNavProps> = ({ selectedCategory, onCategoryClick }) =>
   }
 
   return (
-    <nav className="bg-white shadow-sm sticky top-[64px] md:top-[80px] lg:top-[88px] z-40 border-b-4 border-navy-900">
+    <nav className="bg-white shadow-sm sticky top-[64px] md:top-[72px] lg:top-[80px] z-40 border-b border-navy-900/60">
       <div className="container mx-auto px-4">
-        <div className="flex items-center space-x-2 py-4 overflow-x-auto scrollbar-hide">
-          {categories.map((category) => {
+        <div className="flex items-center space-x-2 py-3 md:py-4 overflow-x-auto scrollbar-hide">
+          {displayCategories.map((category) => {
             const isSelected = selectedCategory === category.id;
 
             return (

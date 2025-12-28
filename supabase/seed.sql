@@ -1,15 +1,15 @@
--- Seed SlimDose Peptides Products
+-- Seed Study Pulse Peptides Products
 
 -- TRUNCATE products table to ensure a clean slate (optional but cleaner for re-seeding fixed list)
 -- Note: Cascading deletes might be needed if other tables reference products, but for a simple product list update this is usually fine if we don't have orders yet or if we want to reset.
 -- Given the instruction to "reset" or "populate", we'll attempt to clear and insert.
 DELETE FROM products;
 
--- Insert new SlimDose products
+-- Insert new Study Pulse products
 INSERT INTO products (name, description, price, category, image_url, featured, available) VALUES
-('SlimDose 10mg', 'Premium weight management peptide solution. Laboratory tested for purity.', 2500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
-('SlimDose 20mg', 'Double strength weight management formula. Enhanced potency.', 3500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
-('SlimDose 30mg', 'Maximum strength weight management solution. Advanced formula.', 4500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
+('Study Pulse 10mg', 'Premium weight management peptide solution. Laboratory tested for purity.', 2500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
+('Study Pulse 20mg', 'Double strength weight management formula. Enhanced potency.', 3500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
+('Study Pulse 30mg', 'Maximum strength weight management solution. Advanced formula.', 4500.00, 'Weight Management', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=800', true, true),
 ('BeautyDose 100mg', 'GHK-Cu Copper peptide for skin rejuvenation and elasticity.', 2800.00, 'Beauty & Anti-Aging', 'https://images.unsplash.com/photo-1612817288484-96916a0816a9?auto=format&fit=crop&q=80&w=800', true, true),
 ('YouthDose 500mg', 'Epitalon peptide for longevity and cellular health.', 3200.00, 'Longevity', 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80&w=800', false, true),
 ('RetaDose 10mg', 'Next generation GLP-1/GIP/Glucagon agonist.', 3800.00, 'Weight Management', 'https://images.unsplash.com/photo-1585435557343-3b092031a831?auto=format&fit=crop&q=80&w=800', true, true),

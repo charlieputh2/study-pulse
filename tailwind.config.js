@@ -6,8 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '475px',
+      },
       colors: {
-        // Minimalist SlimDose Theme
+        // Minimalist Study Pulse Theme
         'theme-bg': '#FFFFFF',      // White
         'theme-text': '#1A1A1A',    // Soft Black
         'theme-accent': '#1A1A1A',  // Black for primary actions

@@ -26,14 +26,17 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ onBack }) => {
       try {
         const { data, error } = await supabase
           .from('products')
-          .select('category');
+          .select('category_id');
 
         if (error) throw error;
 
         const counts: Record<string, number> = {};
         if (data) {
           data.forEach((product) => {
-            counts[product.category] = (counts[product.category] || 0) + 1;
+            const catId = (product as any).category_id ?? (product as any).category;
+            if (catId) {
+              counts[catId] = (counts[catId] || 0) + 1;
+            }
           });
         }
         setCategoryProductCounts(counts);
