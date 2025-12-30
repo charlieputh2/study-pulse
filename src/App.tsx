@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useCart } from './hooks/useCart';
-import Header from './components/Header';
+import UniqueHeader from './components/UniqueHeader';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
 import FloatingCartButton from './components/FloatingCartButton';
-import Footer from './components/Footer';
+import UniqueFooter from './components/UniqueFooter';
 import AdminDashboard from './components/AdminDashboard';
 import Research from './components/Research';
 import Protocols from './components/Protocols';
@@ -17,6 +17,7 @@ import OrderTracking from './components/OrderTracking';
 import SmartGuide from './components/SmartGuide';
 import ArticleDetail from './components/ArticleDetail';
 import TestConnection from './components/TestConnection';
+import Orders from './components/Orders';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -32,7 +33,7 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-white font-inter flex flex-col">
-      <Header
+      <UniqueHeader
         cartItemsCount={cart.getTotalItems()}
         onCartClick={() => handleViewChange('cart')}
         onMenuClick={() => handleViewChange('menu')}
@@ -75,7 +76,7 @@ function MainApp() {
             itemCount={cart.getTotalItems()}
             onCartClick={() => handleViewChange('cart')}
           />
-          <Footer />
+          <UniqueFooter />
         </>
       )}
     </div>
@@ -94,11 +95,13 @@ function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/calculator" element={<PeptideCalculator />} />
         <Route path="/order-tracking" element={<OrderTracking />} />
+        <Route path="/tracking" element={<OrderTracking />} />
         <Route path="/smart-guide" element={<SmartGuide />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
         <Route path="/test-connection" element={<TestConnection />} />
         <Route path="/research" element={<Research />} />
         <Route path="/protocols" element={<Protocols />} />
+        <Route path="/orders" element={<Orders />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>

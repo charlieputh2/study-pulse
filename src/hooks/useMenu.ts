@@ -120,6 +120,78 @@ export function useMenu() {
 
       console.log(`📦 Found ${data?.length || 0} products`);
 
+      // If no products found, add sample data
+      if (!data || data.length === 0) {
+        console.log('⚠️ No products found in database, adding sample data...');
+        const sampleProducts = [
+          {
+            id: 'sample-1',
+            name: 'Study Pulse 10mg',
+            description: 'Premium weight management peptide solution. Laboratory tested for purity.',
+            category: 'Weight Management',
+            base_price: 2500,
+            discount_price: null,
+            discount_active: false,
+            purity_percentage: 99.5,
+            featured: true,
+            available: true,
+            stock_quantity: 10,
+            image_url: null,
+            variations: []
+          },
+          {
+            id: 'sample-2',
+            name: 'BeautyDose 100mg',
+            description: 'GHK-Cu Copper peptide for skin rejuvenation and elasticity.',
+            category: 'Beauty & Anti-Aging',
+            base_price: 2800,
+            discount_price: 2200,
+            discount_active: true,
+            purity_percentage: 98.0,
+            featured: false,
+            available: true,
+            stock_quantity: 5,
+            image_url: null,
+            variations: []
+          },
+          {
+            id: 'sample-3',
+            name: 'YouthDose 500mg',
+            description: 'Epitalon peptide for longevity and cellular health.',
+            category: 'Wellness & Vitality',
+            base_price: 3200,
+            discount_price: null,
+            discount_active: false,
+            purity_percentage: 97.8,
+            featured: true,
+            available: true,
+            stock_quantity: 8,
+            image_url: null,
+            variations: []
+          },
+          {
+            id: 'sample-4',
+            name: 'SlimPen',
+            description: 'Precision delivery device for peptide administration.',
+            category: 'Insulin Pen',
+            base_price: 1500,
+            discount_price: null,
+            discount_active: false,
+            purity_percentage: null,
+            featured: false,
+            available: true,
+            stock_quantity: 15,
+            image_url: null,
+            variations: []
+          }
+        ];
+        
+        console.log('✅ Using sample products:', sampleProducts);
+        setProducts(sampleProducts);
+        setLoading(false);
+        return;
+      }
+
       // Log products with discounts
       const productsWithDiscounts = (data || []).filter(p => p.discount_active && p.discount_price);
       if (productsWithDiscounts.length > 0) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ShieldCheck, Truck, Clock } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Truck, Clock, MessageCircle } from 'lucide-react';
 import { useSiteSettings } from '../hooks/useSiteSettings';
 
 interface HeroProps {
@@ -97,6 +97,18 @@ const Hero: React.FC<HeroProps> = ({ onShopAll }) => {
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </button>
+              <a
+                href="https://t.me/+9jU8Q-FgVms5NjA1?fbclid=IwY2xjawO93V9leHRuA2FlbQIxMABicmlkETE3UTRaaTlnWWtybmFHUmk0c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHoAHCIZXlUTXQo_N4JcXqhl4Vhr2QMV7i8hGSy8xK5Aj41j0Q9-jGc0oOgrY_aem_-joyjDXQFn63ofL_EP4cOQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#0088cc] to-[#0066aa] text-white rounded-xl font-bold shadow-lg shadow-[#0088cc]/20 hover:shadow-xl hover:shadow-[#0088cc]/30 hover:-translate-y-0.5 transition-all overflow-hidden text-sm sm:text-base w-full sm:w-auto"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <span className="relative flex items-center justify-center gap-2">
+                  <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Join Community
+                </span>
+              </a>
             </div>
 
             {/* Trust Indicators */}

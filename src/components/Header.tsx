@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useCOAPageSetting } from '../hooks/useCOAPageSetting';
-import { ShoppingCart, Menu, X, MessageCircle, Calculator, FileText, HelpCircle, Truck, Calendar, ClipboardList } from 'lucide-react';
+import { ShoppingCart, Menu, X, Calculator, FileText, HelpCircle, Truck, Calendar, ClipboardList } from 'lucide-react';
 
 interface HeaderProps {
   cartItemsCount: number;
@@ -58,83 +58,41 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
             </button>
 
             {/* Right Side Navigation */}
-            <div className="flex items-center gap-2 md:gap-4 ml-auto">
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-1.5 lg:gap-3 xl:gap-4">
+            <div className="flex items-center gap-2 ml-auto">
+              {/* Desktop Navigation - Progressive visibility */}
+              <nav className="hidden lg:flex items-center gap-1 xl:gap-2 2xl:gap-3">
                 <a
                   href="/"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
+                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
                   Home
                 </a>
                 <button
                   onClick={onMenuClick}
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
+                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
                   Products
                 </button>
-                <a
-                  href="/research"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
-                >
-                  Research
-                </a>
-                <a
-                  href="/protocols"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
-                >
-                  Protocols
-                </a>
+                {/* Show on xl+ screens */}
                 <a
                   href="/appointments"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
+                  className="hidden xl:flex text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
                   Appointments
                 </a>
                 <a
                   href="/orders"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50"
+                  className="hidden xl:flex text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
                   Orders
                 </a>
+                {/* Show on 2xl+ screens */}
                 <a
                   href="/tracking"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50"
+                  className="hidden 2xl:flex text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
-                  <Truck className="w-4 h-4" />
-                  Real-time Tracking
-                </a>
-                <a
-                  href="/calculator"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50"
-                >
-                  <Calculator className="w-4 h-4" />
-                  Calculator
-                </a>
-                {coaPageEnabled && (
-                  <a
-                    href="/coa"
-                    className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Lab Tests
-                  </a>
-                )}
-                <a
-                  href="/faq"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50"
-                >
-                  <HelpCircle className="w-4 h-4" />
-                  FAQ
-                </a>
-                <a
-                  href="https://t.me/+9jU8Q-FgVms5NjA1?fbclid=IwY2xjawO93V9leHRuA2FlbQIxMABicmlkETE3UTRaaTlnWWtybmFHUmk0c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHoAHCIZXlUTXQo_N4JcXqhl4Vhr2QMV7i8hGSy8xK5Aj41j0Q9-jGc0oOgrY_aem_-joyjDXQFn63ofL_EP4cOQ"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold text-gray-700 hover:text-[#0088cc] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Join Community
+                  <Truck className="w-4 h-4 flex-shrink-0" />
+                  <span>Tracking</span>
                 </a>
                 <button
                   onClick={() => {
@@ -144,7 +102,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                       productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   }}
-                  className="hidden lg:inline-flex items-center gap-2 bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#1d4ed8] text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-[1px]"
+                  className="hidden 2xl:inline-flex items-center gap-2 bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#1d4ed8] text-white text-sm font-semibold px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-[1px] whitespace-nowrap"
                 >
                   Shop Now
                 </button>
@@ -163,10 +121,10 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 )}
               </button>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button - Show on smaller screens */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 text-theme-text hover:text-[#1d4ed8] transition-all duration-200 rounded-full hover:bg-blue-50"
+                className="lg:hidden p-2 text-theme-text hover:text-[#1d4ed8] transition-all duration-200 rounded-full hover:bg-blue-50"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -182,7 +140,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[60]">
+        <div className="lg:hidden fixed inset-0 z-[60]">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm transition-opacity"
@@ -230,28 +188,9 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                   Products
                 </button>
                 <a
-                  href="/research"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gold-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M4 19.5V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v13.5l-5-2-5 2z" /></svg>
-                  </div>
-                  Research
-                </a>
-                <a
-                  href="/protocols"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gold-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M6 4h9l3 3v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="M9 13h6" /><path d="M9 17h6" /><path d="M9 9h3" /></svg>
-                  </div>
-                  Protocols
-                </a>
-                <a
                   href="/appointments"
                   className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
                     <Calendar className="w-5 h-5 text-gold-500" />
@@ -261,6 +200,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 <a
                   href="/orders"
                   className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
                     <ClipboardList className="w-5 h-5 text-gold-500" />
@@ -270,50 +210,28 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 <a
                   href="/tracking"
                   className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
                     <Truck className="w-5 h-5 text-gold-500" />
                   </div>
                   Real-time Tracking
                 </a>
-                <a
-                  href="/calculator"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
+                
+                {/* Shop Now button for mobile */}
+                <button
+                  onClick={() => {
+                    // Scroll to products section
+                    const productsSection = document.getElementById('products-section');
+                    if (productsSection) {
+                      productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1d4ed8] via-[#2563eb] to-[#1d4ed8] text-white text-sm font-semibold px-4 py-3 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-[1px] mt-4"
                 >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <Calculator className="w-5 h-5 text-gold-500" />
-                  </div>
-                  Peptide Calculator
-                </a>
-                <a
-                  href="/coa"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
-                >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <FileText className="w-5 h-5 text-gold-500" />
-                  </div>
-                  Lab Tests (COA)
-                </a>
-                <a
-                  href="/faq"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
-                >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <HelpCircle className="w-5 h-5 text-gold-500" />
-                  </div>
-                  FAQ
-                </a>
-                <a
-                  href="https://t.me/+9jU8Q-FgVms5NjA1?fbclid=IwY2xjawO93V9leHRuA2FlbQIxMABicmlkETE3UTRaaTlnWWtybmFHUmk0c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHoAHCIZXlUTXQo_N4JcXqhl4Vhr2QMV7i8hGSy8xK5Aj41j0Q9-jGc0oOgrY_aem_-joyjDXQFn63ofL_EP4cOQ"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-xl text-left font-medium text-base text-navy-900 hover:bg-navy-50 hover:text-navy-900 transition-all group"
-                >
-                  <div className="p-2 rounded-lg bg-navy-50 group-hover:bg-white group-hover:shadow-sm border border-transparent group-hover:border-navy-600 transition-all">
-                    <MessageCircle className="w-5 h-5 text-gold-500" />
-                  </div>
-                  Join Community
-                </a>
+                  Shop Now
+                </button>
               </div>
             </nav>
           </div>

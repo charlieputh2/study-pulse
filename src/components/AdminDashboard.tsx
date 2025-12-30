@@ -12,7 +12,7 @@ import PulseInventoryManager from './PeptideInventoryManager';
 import OrdersManager from './OrdersManager';
 import FAQManager from './FAQManager';
 import ShippingManager from './ShippingManager';
-import SiteSettingsManager from './SiteSettingsManager';
+import UniqueSiteSettingsManager from './UniqueSiteSettingsManager';
 import PromoCodeManager from './PromoCodeManager';
 import GuideManager from './GuideManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
@@ -352,19 +352,30 @@ const AdminDashboard: React.FC = () => {
     setLoginError('');
     setLoginLoading(true);
     try {
-      // Simple password-based login without Supabase auth
+      // Offline/fallback login without hitting Supabase (avoids 400s)
       if (password === ADMIN_PASSWORD) {
         setIsAuthenticated(true);
         localStorage.setItem('peptide_admin_auth', 'true');
         setLoginError('');
-        setLoginLoading(false);
         return;
       }
 
-      setLoginError('Invalid admin credentials');
-    } catch (error) {
-      console.error('Login error:', error);
-      setLoginError('Login failed. Please try again.');
+      const { error } = await supabase.auth.signInWithPassword({
+        email: ADMIN_EMAIL,
+        password,
+      });
+
+      if (error) {
+        setLoginError('Invalid admin credentials');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      localStorage.setItem('peptide_admin_auth', 'true');
+      setLoginError('');
+    } catch (err) {
+      console.error('Admin login failed:', err);
+      setLoginError('Unable to sign in. Please try again.');
     } finally {
       setLoginLoading(false);
     }
@@ -1156,7 +1167,7 @@ const AdminDashboard: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
           </button>
-          <SiteSettingsManager />
+          <UniqueSiteSettingsManager />
         </div>
       </div>
     );

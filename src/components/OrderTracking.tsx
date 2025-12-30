@@ -17,12 +17,22 @@ interface TrackingOrder {
     created_at: string;
 }
 
+interface RiderInfo {
+    // Add properties for RiderInfo here
+}
+
+interface TrackingEvent {
+    // Add properties for TrackingEvent here
+}
+
 const OrderTracking: React.FC = () => {
     const [orderId, setOrderId] = useState('');
     const [order, setOrder] = useState<TrackingOrder | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasSearched, setHasSearched] = useState(false);
+    const [rider, setRider] = useState<RiderInfo | null>(null);
+    const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
 
     const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault();
