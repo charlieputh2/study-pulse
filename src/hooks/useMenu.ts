@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Product, ProductVariation } from '../types';
+import type { Product, ProductVariation, ProductOption } from '../types';
 
 export function useMenu() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +36,18 @@ export function useMenu() {
         (payload) => {
           console.log('✅ Variation changed:', payload);
           fetchProducts(); // Refetch all products when variations change
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_options'
+        },
+        (payload) => {
+          console.log('✅ Product option changed:', payload);
+          fetchProducts(); // Refetch all products when options change
         }
       )
       .subscribe((status) => {
@@ -216,8 +228,8 @@ export function useMenu() {
         );
       }
 
-      // Fetch variations for each product
-      const productsWithVariations = await Promise.all(
+      // Fetch variations and options for each product
+      const productsWithData = await Promise.all(
         (data || []).map(async (product) => {
           // Normalize legacy/new column names
           const normalizedProduct: any = {
@@ -229,14 +241,26 @@ export function useMenu() {
             featured: (product as any).featured ?? (product as any).is_featured ?? false,
           };
 
+          // Fetch variations
           const { data: variations } = await supabase
             .from('product_variations')
             .select('*')
             .eq('product_id', product.id)
             .order('quantity_mg', { ascending: true });
 
+          // Fetch product options
+          const { data: options } = await supabase
+            .from('product_options')
+            .select('*')
+            .eq('product_id', product.id)
+            .order('sort_order', { ascending: true });
+
           if (variations && variations.length > 0) {
             console.log(`  └─ ${product.name}: ${variations.length} variations, prices:`, variations.map(v => `${v.name}:₱${v.price}`));
+          }
+
+          if (options && options.length > 0) {
+            console.log(`  📦 ${product.name}: ${options.length} options:`, options.map(o => `${o.name}:₱${o.final_price || (normalizedProduct.base_price + o.price_adjustment)}`));
           }
 
           // Log if product has image_url
@@ -246,13 +270,14 @@ export function useMenu() {
 
           return {
             ...normalizedProduct,
-            variations: variations || []
+            variations: variations || [],
+            options: options || []
           };
         })
       );
 
       console.log('✅ Products updated successfully at', new Date().toLocaleTimeString());
-      setProducts(productsWithVariations);
+      setProducts(productsWithData);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch products');

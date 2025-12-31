@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { X, Package, Beaker, ShoppingCart, Plus, Minus, Sparkles } from 'lucide-react';
-import type { Product, ProductVariation } from '../types';
+import type { Product, ProductVariation, ProductOption } from '../types';
 
 interface ProductDetailModalProps {
   product: Product;
   onClose: () => void;
-  onAddToCart: (product: Product, variation: ProductVariation | undefined, quantity: number) => void;
+  onAddToCart: (product: Product, variation?: ProductVariation, option?: ProductOption, quantity?: number) => void;
 }
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, onAddToCart }) => {
@@ -16,13 +16,25 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     return available || product.variations[0];
   };
 
+  // Select first available option, or first option if all are out of stock
+  const getFirstAvailableOption = () => {
+    if (!product.options || product.options.length === 0) return undefined;
+    const available = product.options.find(o => o.available !== false && o.stock_quantity > 0);
+    return available || product.options.find(o => o.available !== false) || product.options[0];
+  };
+
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | undefined>(
     getFirstAvailableVariation()
+  );
+  const [selectedOption, setSelectedOption] = useState<ProductOption | undefined>(
+    getFirstAvailableOption()
   );
   const [quantity, setQuantity] = useState(1);
 
   const hasDiscount = product.discount_active && product.discount_price;
-  const currentPrice = selectedVariation?.price || (hasDiscount ? product.discount_price! : product.base_price);
+  const currentPrice = selectedOption 
+    ? (selectedOption.final_price || (selectedVariation?.price || (hasDiscount ? product.discount_price! : product.base_price)) + selectedOption.price_adjustment)
+    : selectedVariation?.price || (hasDiscount ? product.discount_price! : product.base_price);
   const showPurity = Boolean(product.purity_percentage);
 
   // Check if product has any available stock
@@ -34,7 +46,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
   const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1);
 
   const handleAddToCart = () => {
-    onAddToCart(product, selectedVariation, quantity);
+    onAddToCart(product, selectedVariation, selectedOption, quantity);
     onClose();
   };
 
@@ -215,6 +227,57 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                       <p className="text-xs text-red-600 mt-1.5 font-semibold">
                         ⚠️ This size is currently out of stock. Please select another size.
                       </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Package Options Selection - Compact Dropdown */}
+                {product.options && product.options.length > 0 && (
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
+                      Select Package:
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedOption?.id || ''}
+                        onChange={(e) => {
+                          const option = product.options?.find(o => o.id === e.target.value);
+                          if (option && option.stock_quantity > 0) {
+                            setSelectedOption(option);
+                          }
+                        }}
+                        className="w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm font-medium rounded-lg sm:rounded-xl border-2 border-navy-700/30 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all appearance-none cursor-pointer hover:border-navy-900"
+                      >
+                        {product.options
+                          .filter(option => option.available !== false && option.stock_quantity > 0)
+                          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+                          .map((option) => {
+                            const optionPrice = option.final_price || (selectedVariation?.price || product.base_price) + option.price_adjustment;
+                            return (
+                              <option key={option.id} value={option.id}>
+                                {option.name} - ₱{optionPrice.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                              </option>
+                            );
+                          })}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 pointer-events-none">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                    {selectedOption && selectedOption.description && (
+                      <div className="mt-2 p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200">
+                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{selectedOption.description}</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-semibold text-purple-600">
+                            Selected: {selectedOption.name}
+                          </span>
+                          <span className="text-xs sm:text-sm text-gray-500">
+                            Stock: {selectedOption.stock_quantity} units
+                          </span>
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}

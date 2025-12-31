@@ -32,6 +32,7 @@ export interface Product {
 
   // Relations
   variations?: ProductVariation[];
+  options?: ProductOption[];
 }
 
 export interface ProductVariation {
@@ -44,6 +45,20 @@ export interface ProductVariation {
   discount_active: boolean;
   stock_quantity: number;
   created_at: string;
+}
+
+export interface ProductOption {
+  id: string;
+  product_id: string;
+  name: string;
+  description: string | null;
+  price_adjustment: number;
+  final_price: number | null;
+  stock_quantity: number;
+  available: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Category {
@@ -96,6 +111,7 @@ export interface SiteSettings {
 export interface CartItem {
   product: Product;
   variation?: ProductVariation;
+  option?: ProductOption;
   quantity: number;
   price: number;
 }

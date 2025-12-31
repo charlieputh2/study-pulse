@@ -124,7 +124,18 @@ const AdminDashboard: React.FC = () => {
     />
   ) : null;
 
-  const [formData, setFormData] = useState<Partial<Product>>({
+  const [formData, setFormData] = useState<Partial<Product & { 
+    enable_options?: boolean; 
+    options?: Array<{
+      name: string;
+      description?: string;
+      price_adjustment: number;
+      final_price?: number | null;
+      stock_quantity: number;
+      available: boolean;
+      sort_order: number;
+    }>;
+  }>>({
     name: '',
     description: '',
     base_price: 0,
@@ -139,7 +150,9 @@ const AdminDashboard: React.FC = () => {
     stock_quantity: 0,
     image_url: null,
     discount_active: false,
-    inclusions: null
+    inclusions: null,
+    enable_options: false,
+    options: []
   });
 
   const handleAddProduct = () => {
@@ -162,7 +175,9 @@ const AdminDashboard: React.FC = () => {
       stock_quantity: 0,
       image_url: null,
       discount_active: false,
-      inclusions: null
+      inclusions: null,
+      enable_options: false,
+      options: []
     });
   };
 
@@ -359,6 +374,46 @@ const AdminDashboard: React.FC = () => {
         console.log('✅ Product updated successfully', {
           saved_image_url: result.data?.image_url
         });
+        
+        // Save product options if enabled
+        if (formData.enable_options && formData.options && formData.options.length > 0) {
+          console.log('💾 Saving product options for updated product...');
+          try {
+            const productId = editingProduct.id;
+            if (productId) {
+              // Delete existing options for this product
+              await supabase.from('product_options').delete().eq('product_id', productId);
+              
+              // Insert new options
+              const optionsToInsert = formData.options
+                .filter(option => option.name.trim() !== '') // Only save options with names
+                .map(option => ({
+                  product_id: productId,
+                  name: option.name,
+                  description: option.description || null,
+                  price_adjustment: option.price_adjustment || 0,
+                  final_price: option.final_price || null,
+                  stock_quantity: option.stock_quantity || 0,
+                  available: option.available !== false,
+                  sort_order: option.sort_order || 0
+                }));
+              
+              if (optionsToInsert.length > 0) {
+                const { error: optionsError } = await supabase
+                  .from('product_options')
+                  .insert(optionsToInsert);
+                
+                if (optionsError) {
+                  console.warn('⚠️ Failed to save product options:', optionsError);
+                } else {
+                  console.log('✅ Product options saved successfully');
+                }
+              }
+            }
+          } catch (optionsError) {
+            console.warn('⚠️ Error saving product options:', optionsError);
+          }
+        }
       } else {
         // Remove non-creatable fields for new products
         const { variations, ...createData } = formData as any;
@@ -384,6 +439,46 @@ const AdminDashboard: React.FC = () => {
           throw new Error(result.error);
         }
         console.log('✅ Product created successfully');
+        
+        // Save product options if enabled
+        if (formData.enable_options && formData.options && formData.options.length > 0) {
+          console.log('💾 Saving product options...');
+          try {
+            const productId = result.data?.id;
+            if (productId) {
+              // Delete existing options for this product
+              await supabase.from('product_options').delete().eq('product_id', productId);
+              
+              // Insert new options
+              const optionsToInsert = formData.options
+                .filter(option => option.name.trim() !== '') // Only save options with names
+                .map(option => ({
+                  product_id: productId,
+                  name: option.name,
+                  description: option.description || null,
+                  price_adjustment: option.price_adjustment || 0,
+                  final_price: option.final_price || null,
+                  stock_quantity: option.stock_quantity || 0,
+                  available: option.available !== false,
+                  sort_order: option.sort_order || 0
+                }));
+              
+              if (optionsToInsert.length > 0) {
+                const { error: optionsError } = await supabase
+                  .from('product_options')
+                  .insert(optionsToInsert);
+                
+                if (optionsError) {
+                  console.warn('⚠️ Failed to save product options:', optionsError);
+                } else {
+                  console.log('✅ Product options saved successfully');
+                }
+              }
+            }
+          } catch (optionsError) {
+            console.warn('⚠️ Error saving product options:', optionsError);
+          }
+        }
       }
 
       // Refresh products to ensure UI is updated
@@ -874,6 +969,219 @@ const AdminDashboard: React.FC = () => {
                     });
                   }}
                 />
+              </div>
+
+              {/* Product Options */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-gray-200 rounded-lg p-3 md:p-4">
+                <div className="flex items-center justify-between mb-3 md:mb-4">
+                  <h3 className="text-sm md:text-base font-bold text-gray-900 flex items-center gap-1.5">
+                    <span className="text-base md:text-lg">📦</span>
+                    Product Options
+                  </h3>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.enable_options || false}
+                      onChange={(e) => {
+                        setFormData({ ...formData, enable_options: e.target.checked });
+                        if (e.target.checked && !formData.options) {
+                          // Initialize with default options
+                          setFormData({ 
+                            ...formData, 
+                            enable_options: true,
+                            options: [
+                              {
+                                name: 'Complete Set',
+                                description: 'Everything you need: vial, bac water, syringes, alcohol pads, and instructions',
+                                price_adjustment: 50,
+                                final_price: null,
+                                stock_quantity: 50,
+                                available: true,
+                                sort_order: 1
+                              },
+                              {
+                                name: 'Vial + Bac Water Only',
+                                description: 'Just the essentials: peptide vial and bacteriostatic water',
+                                price_adjustment: 15,
+                                final_price: null,
+                                stock_quantity: 75,
+                                available: true,
+                                sort_order: 2
+                              },
+                              {
+                                name: 'Vial Only',
+                                description: 'Peptide vial only - perfect if you already have supplies',
+                                price_adjustment: 0,
+                                final_price: null,
+                                stock_quantity: 100,
+                                available: true,
+                                sort_order: 3
+                              }
+                            ]
+                          });
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-semibold text-gray-700">Enable product options</span>
+                  </label>
+                </div>
+                
+                {formData.enable_options && formData.options && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-gray-600 mb-2">
+                      Configure the different purchase options for this product. Each option can have its own price and stock.
+                    </p>
+                    
+                    {formData.options.map((option, index) => (
+                      <div key={index} className="bg-white border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-900">Option {index + 1}</h4>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOptions = [...(formData.options || [])];
+                              newOptions.splice(index, 1);
+                              setFormData({ ...formData, options: newOptions });
+                            }}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Option Name *</label>
+                            <input
+                              type="text"
+                              value={option.name}
+                              onChange={(e) => {
+                                const newOptions = [...(formData.options || [])];
+                                newOptions[index] = { ...newOptions[index], name: e.target.value };
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="input-field text-sm"
+                              placeholder="e.g., Complete Set"
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+                            <textarea
+                              value={option.description || ''}
+                              onChange={(e) => {
+                                const newOptions = [...(formData.options || [])];
+                                newOptions[index] = { ...newOptions[index], description: e.target.value };
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="input-field text-sm"
+                              placeholder="Describe what this option includes..."
+                              rows={2}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Price Adjustment (₱)</label>
+                            <input
+                              type="number"
+                              step="1"
+                              value={option.price_adjustment || 0}
+                              onChange={(e) => {
+                                const newOptions = [...(formData.options || [])];
+                                newOptions[index] = { ...newOptions[index], price_adjustment: Number(e.target.value) };
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="input-field text-sm"
+                              placeholder="0"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Amount to add to base price</p>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Stock Quantity</label>
+                            <input
+                              type="number"
+                              value={option.stock_quantity || 0}
+                              onChange={(e) => {
+                                const newOptions = [...(formData.options || [])];
+                                newOptions[index] = { ...newOptions[index], stock_quantity: Number(e.target.value) };
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="input-field text-sm"
+                              placeholder="0"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={option.available !== false}
+                                onChange={(e) => {
+                                  const newOptions = [...(formData.options || [])];
+                                  newOptions[index] = { ...newOptions[index], available: e.target.checked };
+                                  setFormData({ ...formData, options: newOptions });
+                                }}
+                                className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                              />
+                              <span className="text-xs font-semibold text-gray-700">Available</span>
+                            </label>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-700 mb-1">Sort Order</label>
+                            <input
+                              type="number"
+                              value={option.sort_order || 0}
+                              onChange={(e) => {
+                                const newOptions = [...(formData.options || [])];
+                                newOptions[index] = { ...newOptions[index], sort_order: Number(e.target.value) };
+                                setFormData({ ...formData, options: newOptions });
+                              }}
+                              className="input-field text-sm"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newOptions = [...(formData.options || [])];
+                        newOptions.push({
+                          name: '',
+                          description: '',
+                          price_adjustment: 0,
+                          final_price: null,
+                          stock_quantity: 0,
+                          available: true,
+                          sort_order: (formData.options?.length || 0) + 1
+                        });
+                        setFormData({ ...formData, options: newOptions });
+                      }}
+                      className="text-blue-600 hover:text-blue-700 text-xs font-medium flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add New Option
+                    </button>
+                  </div>
+                )}
+                
+                {!formData.enable_options && (
+                  <div className="text-center py-4">
+                    <p className="text-xs text-gray-500 mb-2">Enable product options to offer different purchase packages</p>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, enable_options: true })}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      Enable Options
+                    </button>
+                  </div>
+                )}
               </div>
 
             </div>

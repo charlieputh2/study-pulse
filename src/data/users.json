@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "id": "1767191179227",
+      "email": "capstonee2@gmail.com",
+      "fullName": "Charlie",
+      "password": "Bboy12345",
+      "photo": null,
+      "createdAt": "2025-12-31T14:26:19.233Z",
+      "updatedAt": "2025-12-31T14:26:19.233Z",
+      "isActive": true,
+      "role": "user"
+    }
+  ]
+}

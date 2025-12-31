@@ -19,6 +19,8 @@ import ArticleDetail from './components/ArticleDetail';
 import TestConnection from './components/TestConnection';
 import OrdersPage from './components/OrdersPage';
 import ProductsPage from './components/ProductsPage';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -113,6 +115,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<MainApp />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/coa" element={<COA />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/calculator" element={<PeptideCalculator />} />

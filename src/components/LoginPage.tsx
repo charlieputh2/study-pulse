@@ -1,0 +1,389 @@
+import React, { useState, useEffect } from 'react';
+import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2, Shield, Sparkles, Heart, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import UniqueHeader from './UniqueHeader';
+import UniqueFooter from './UniqueFooter';
+import PasswordRecovery from './PasswordRecovery';
+
+const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
+  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
+
+  const navigate = useNavigate();
+
+  // Check if user is already logged in - but allow access to login page
+  useEffect(() => {
+    const savedUser = localStorage.getItem('studyPulseUser');
+    if (savedUser) {
+      // User is already logged in, but don't auto-redirect
+      // Let the user decide if they want to re-login or go to home
+      console.log('User already logged in, but staying on login page');
+      setAlreadyLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    if (!email || !password) {
+      setError('Please fill all required fields');
+      setIsLoading(false);
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Show loading notification
+      await Swal.fire({
+        title: 'Authenticating...',
+        html: `
+          <div style="text-align: center;">
+            <div class="loader"></div>
+            <p style="color: #6b7280; margin-top: 1rem;">Verifying your credentials...</p>
+          </div>
+        `,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading(),
+        backdrop: 'rgba(0,0,0,0.5)',
+      });
+
+      // API call to login user
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password: password,
+          rememberMe: rememberMe
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('JSON parsing error:', jsonError);
+        throw new Error('Invalid server response');
+      }
+
+      if (data.success) {
+        // Store user in localStorage
+        localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
+        
+        // Close loading and show success
+        Swal.close();
+        
+        // Show success notification with animation
+        await Swal.fire({
+          icon: 'success',
+          title: '🎉 Login Successful!',
+          html: `
+            <div style="text-align: center; animation: fadeIn 0.5s;">
+              <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounce 1s infinite;">🎊</div>
+              <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                Welcome back, <strong style="color: #3b82f6;">${data.user.fullName}</strong>!
+              </p>
+              <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
+                <p style="color: #059669; font-size: 0.9rem;">✓ Successfully authenticated</p>
+                <p style="color: #059669; font-size: 0.9rem;">✓ Session secured</p>
+                <p style="color: #059669; font-size: 0.9rem;">✓ Ready to explore</p>
+              </div>
+              <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to homepage...</p>
+            </div>
+          `,
+          timer: 3000,
+          timerProgressBar: true,
+          confirmButtonColor: '#10b981',
+          backdrop: 'rgba(0,0,0,0.5)',
+          showClass: {
+            popup: 'animate__animated animate__fadeInDown'
+          },
+          hideClass: {
+            popup: 'animate__animated animate__fadeOutUp'
+          }
+        });
+        
+        navigate('/');
+      } else {
+        setError(data.message || 'Login failed');
+        await Swal.fire({
+          icon: 'error',
+          title: '❌ Login Failed',
+          text: data.message || 'Unable to authenticate. Please check your credentials and try again.',
+          confirmButtonColor: '#ef4444',
+          backdrop: 'rgba(0,0,0,0.5)',
+          showClass: {
+            popup: 'animate__animated animate__shakeX'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Swal.close();
+      await Swal.fire({
+        icon: 'error',
+        title: '❌ Login Failed',
+        text: 'Unable to authenticate. Please check your credentials and try again.',
+        confirmButtonColor: '#ef4444',
+        backdrop: 'rgba(0,0,0,0.5)',
+        showClass: {
+          popup: 'animate__animated animate__shakeX'
+        }
+      });
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col">
+      {/* Real Header */}
+      <UniqueHeader 
+        cartItemsCount={0} 
+        onCartClick={() => {}} 
+        onMenuClick={() => navigate('/')}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto px-4 py-8 md:py-16">
+        <div className="max-w-lg mx-auto">
+          {showPasswordRecovery ? (
+            <PasswordRecovery onBack={() => setShowPasswordRecovery(false)} />
+          ) : (
+            <>
+              {/* Professional Hero Section */}
+              <div className="text-center mb-12">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl mb-8 transform hover:scale-105 transition-all duration-300 hover:shadow-3xl overflow-hidden">
+                  <img
+                    src="/logoo.jpg"
+                    alt="Study Pulse"
+                    className="w-20 h-20 object-cover rounded-2xl"
+                  />
+                </div>
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent mb-4">
+                  Welcome Back
+                </h1>
+                <p className="text-gray-600 text-lg md:text-xl max-w-md mx-auto leading-relaxed">
+                  Access your premium research solutions and continue your scientific journey
+                </p>
+                <div className="flex justify-center gap-3 mt-6">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
+                    <Shield className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-700">Secure</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-700">Premium</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1 bg-purple-100 rounded-full">
+                    <Star className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-700">Professional</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Login Card */}
+              <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 hover:shadow-3xl transition-all duration-300">
+                {/* Already Logged In Alert */}
+                {alreadyLoggedIn && (
+                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <span className="text-yellow-800 text-sm font-medium">You are already logged in</span>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => navigate('/')}
+                            className="text-xs text-blue-600 hover:text-blue-700 underline"
+                          >
+                            Go to Homepage
+                          </button>
+                          <span className="text-xs text-gray-500">or</span>
+                          <button
+                            onClick={() => {
+                              localStorage.removeItem('studyPulseUser');
+                              setAlreadyLoggedIn(false);
+                              setError('');
+                            }}
+                            className="text-xs text-red-600 hover:text-red-700 underline"
+                          >
+                            Logout and Login Again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                      <span className="text-red-800 text-sm font-medium">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Login Form */}
+                <form onSubmit={handleLogin} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <Mail className="w-4 h-4 inline mr-2" />
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-lg"
+                      placeholder="juan@example.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <Lock className="w-4 h-4 inline mr-2" />
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-4 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-lg"
+                        placeholder="Enter your password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-4 text-gray-500 hover:text-gray-700 transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="remember"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <label htmlFor="remember" className="ml-2 text-sm text-gray-700">
+                        Remember me
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordRecovery(true)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] text-lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5 mr-2" />
+                        Sign In
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Register Link */}
+                <div className="mt-6 text-center">
+                  <p className="text-gray-600">
+                    Don't have an account?{' '}
+                    <a 
+                      href="/register" 
+                      className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
+                    >
+                      Create Account
+                    </a>
+                  </p>
+                </div>
+
+                {/* Benefits */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-blue-900 mb-3 text-sm flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-red-500" />
+                    Why Login?
+                  </h3>
+                  <ul className="text-sm text-blue-800 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                      <span>Save your information for faster checkout</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                      <span>Track your orders and delivery status</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                      <span>Access exclusive member benefits</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                      <span>Get personalized recommendations</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-blue-600" />
+                      <span>Receive special offers and discounts</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+
+      {/* Real Footer - Ensure it's outside main and properly positioned */}
+      <UniqueFooter />
+    </div>
+  );
+};
+
+export default LoginPage;

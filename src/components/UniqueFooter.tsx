@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, 
   Mail, 
@@ -17,6 +17,7 @@ import {
   Send,
   ArrowRight
 } from 'lucide-react';
+import EmailSubscription from './EmailSubscription';
 
 const UniqueFooter: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -153,60 +154,9 @@ const UniqueFooter: React.FC = () => {
                 </ul>
               </div>
 
-              {/* Contact */}
+              {/* Email Subscription */}
               <div>
-                <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-green-400" />
-                  Contact
-                </h4>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                    <div>
-                      <div className="text-white font-medium">Address</div>
-                      <div className="text-gray-300 text-sm">
-                        123 Research Street, Science City, SC 12345
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <a href="mailto:support@studypulse.com" className="text-gray-300 hover:text-blue-400 transition-colors">
-                      support@studypulse.com
-                    </a>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-gray-400" />
-                    <a href="tel:+12345678900" className="text-gray-300 hover:text-blue-400 transition-colors">
-                      +1-234-567-8900
-                    </a>
-                  </div>
-                </div>
-
-                {/* Social Links */}
-                <div className="mt-6">
-                  <h5 className="text-white font-medium mb-3">Connect With Us</h5>
-                  <div className="flex gap-3">
-                    <a
-                      href="https://facebook.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 bg-blue-600/20 border border-blue-400/30 rounded-lg flex items-center justify-center hover:bg-blue-600/30 transition-colors"
-                    >
-                      <Facebook className="w-5 h-5 text-blue-400" />
-                    </a>
-                    <a
-                      href="https://t.me/+9jU8Q-FgVms5NjA1?fbclid=IwY2xjawO93V9leHRuA2FlbQIxMABicmlkETE3UTRaaTlnWWtybmFHUmk0c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHoAHCIZXlUTXQo_N4JcXqhl4Vhr2QMV7i8hGSy8xK5Aj41j0Q9-jGc0oOgrY_aem_-joyjDXQFn63ofL_EP4cOQ"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-10 h-10 bg-green-600/20 border border-green-400/30 rounded-lg flex items-center justify-center hover:bg-green-600/30 transition-colors"
-                    >
-                      <MessageCircle className="w-5 h-5 text-green-400" />
-                    </a>
-                  </div>
-                </div>
+                <EmailSubscription />
               </div>
             </div>
           </div>

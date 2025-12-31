@@ -1,25 +1,30 @@
 import React, { useState } from 'react';
-import type { Product, ProductVariation } from '../types';
-import { ShoppingCart, Heart, Eye, Star, Zap, Shield, Award, TrendingUp, Plus, Minus } from 'lucide-react';
+import type { Product, ProductVariation, ProductOption } from '../types';
+import { ShoppingCart, Heart, Eye, Star, Zap, Shield, Award, TrendingUp, Plus, Minus, Package } from 'lucide-react';
 
 interface MenuItemCardProps {
   product: Product;
-  addToCart: (product: Product, variation?: ProductVariation, quantity?: number) => void;
+  addToCart: (product: Product, variation?: ProductVariation, option?: ProductOption, quantity?: number) => void;
   onQuickView?: (product: Product) => void;
 }
 
 const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, onQuickView }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | undefined>(product.variations?.[0]);
+  const [selectedOption, setSelectedOption] = useState<ProductOption | undefined>(product.options?.[0]);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAddToCart = () => {
-    addToCart(product, selectedVariation, quantity);
+    addToCart(product, selectedVariation, selectedOption, quantity);
     setQuantity(1); // Reset quantity after adding to cart
   };
 
-  const displayPrice = selectedVariation ? selectedVariation.price : product.base_price;
+  const displayPrice = selectedOption 
+    ? (selectedOption.final_price || (selectedVariation ? selectedVariation.price : product.base_price) + selectedOption.price_adjustment)
+    : selectedVariation 
+      ? selectedVariation.price 
+      : product.base_price;
   const displayOriginalPrice = selectedVariation ? selectedVariation.discount_price : product.discount_price;
   const hasDiscount = displayOriginalPrice && displayOriginalPrice > displayPrice;
 
@@ -29,37 +34,48 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Product Image with Enhanced Design */}
-      <div className="relative w-full h-56 sm:h-64 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6 rounded-t-3xl">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-blue-500 rounded-full blur-2xl"></div>
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-2xl"></div>
+      {/* Product Image with Professional Design */}
+      <div className="relative w-full h-48 sm:h-56 md:h-64 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 sm:p-6 rounded-t-3xl">
+        {/* Professional Background Pattern */}
+        <div className="absolute inset-0 opacity-3">
+          <div className="absolute top-0 left-0 w-24 h-24 sm:w-32 sm:h-32 bg-blue-500 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-purple-500 rounded-full blur-2xl"></div>
         </div>
         
-        <img
-          src={product.image_url || '/assets/logo.jpeg'}
-          alt={product.name}
-          className="max-h-full max-w-full object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
-        />
-
-        {/* Enhanced Badges - REMOVED to prevent duplication */}
-        {/* Badges are now handled in Products.tsx */}
+        {/* Product Image with Professional Fallback */}
+        {product.image_url ? (
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="max-h-full max-w-full object-contain transition-all duration-700 group-hover:scale-105 relative z-10"
+            onError={(e) => {
+              // Fallback to logo if image fails to load
+              e.currentTarget.src = '/assets/logo.jpeg';
+            }}
+          />
+        ) : (
+          <div className="relative z-10 flex flex-col items-center justify-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+              <Package className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            </div>
+            <span className="text-xs sm:text-sm font-medium text-gray-500 text-center">Product Image</span>
+          </div>
+        )}
 
         {/* Quick Actions */}
-        <div className={`absolute top-3 right-3 flex flex-col space-y-2 z-20 transition-all duration-300 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+        <div className={`absolute top-2 sm:top-3 right-2 sm:right-3 flex flex-col space-y-2 z-20 transition-all duration-300 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <button
             onClick={() => setIsWishlisted(!isWishlisted)}
-            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 hover:scale-110 group"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 hover:scale-110 group"
           >
-            <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600 group-hover:text-red-500'}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600 group-hover:text-red-500'}`} />
           </button>
           {onQuickView && (
             <button
               onClick={() => onQuickView(product)}
-              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 hover:scale-110"
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 hover:scale-110"
             >
-              <Eye className="w-4 h-4 text-gray-600 hover:text-blue-500" />
+              <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 group-hover:text-blue-500" />
             </button>
           )}
         </div>
@@ -141,6 +157,45 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
           </div>
         )}
 
+        {/* Product Options - Compact Dropdown */}
+        {product.options && product.options.length > 0 && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Package Type:</label>
+            <div className="relative">
+              <select
+                value={selectedOption?.id || ''}
+                onChange={(e) => {
+                  const option = product.options?.find(o => o.id === e.target.value);
+                  if (option) setSelectedOption(option);
+                }}
+                className="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all appearance-none cursor-pointer hover:border-gray-300"
+              >
+                {product.options
+                  .filter(option => option.available !== false)
+                  .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+                  .map((option) => {
+                    const optionPrice = option.final_price || (selectedVariation ? selectedVariation.price : product.base_price) + option.price_adjustment;
+                    return (
+                      <option key={option.id} value={option.id}>
+                        {option.name} - ₱{optionPrice.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </option>
+                    );
+                  })}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            {selectedOption && selectedOption.description && (
+              <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600 leading-relaxed">{selectedOption.description}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Price Section */}
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
@@ -161,7 +216,9 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
           
           {/* Price Per Unit/Info */}
           <div className="text-sm text-gray-500 mt-1">
-            {selectedVariation ? (
+            {selectedOption ? (
+              <span>{selectedOption.name}</span>
+            ) : selectedVariation ? (
               <span>{selectedVariation.name || 'Standard Variation'}</span>
             ) : (
               <span>Per Unit</span>

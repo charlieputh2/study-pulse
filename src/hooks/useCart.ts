@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { CartItem, Product, ProductVariation } from '../types';
+import type { CartItem, Product, ProductVariation, ProductOption } from '../types';
 
 // Helper function to load cart from localStorage synchronously
 const loadCartFromStorage = (): CartItem[] => {
@@ -86,20 +86,32 @@ export function useCart() {
     return () => window.removeEventListener('addToCart', handleAddToCartEvent as EventListener);
   }, []);
 
-  const addToCart = (product: Product, variation?: ProductVariation, quantity: number = 1) => {
+  const addToCart = (product: Product, variation?: ProductVariation, option?: ProductOption, quantity: number = 1) => {
     // Check stock availability
-    const availableStock = variation ? variation.stock_quantity : product.stock_quantity;
+    let availableStock = variation ? variation.stock_quantity : product.stock_quantity;
+    if (option) {
+      availableStock = option.stock_quantity;
+    }
 
     if (availableStock === 0) {
-      alert(`Sorry, ${product.name}${variation ? ` ${variation.name}` : ''} is out of stock.`);
+      alert(`Sorry, ${product.name}${variation ? ` ${variation.name}` : ''}${option ? ` - ${option.name}` : ''} is out of stock.`);
       return;
     }
 
-    const price = variation ? variation.price : (product.discount_active && product.discount_price ? product.discount_price : product.base_price);
+    // Calculate price based on option, then variation, then base product
+    let price = product.base_price;
+    if (option) {
+      price = option.final_price || (variation ? variation.price : product.base_price) + option.price_adjustment;
+    } else if (variation) {
+      price = variation.price;
+    } else if (product.discount_active && product.discount_price) {
+      price = product.discount_price;
+    }
 
     const existingItemIndex = cartItems.findIndex(
       item => item.product.id === product.id &&
-        (variation ? item.variation?.id === variation.id : !item.variation)
+        (variation ? item.variation?.id === variation.id : !item.variation) &&
+        (option ? item.option?.id === option.id : !item.option)
     );
 
     if (existingItemIndex > -1) {
@@ -131,6 +143,7 @@ export function useCart() {
       const newItem: CartItem = {
         product,
         variation,
+        option,
         quantity,
         price
       };
@@ -146,7 +159,10 @@ export function useCart() {
 
     // Check stock availability
     const item = cartItems[index];
-    const availableStock = item.variation ? item.variation.stock_quantity : item.product.stock_quantity;
+    let availableStock = item.variation ? item.variation.stock_quantity : item.product.stock_quantity;
+    if (item.option) {
+      availableStock = item.option.stock_quantity;
+    }
 
     if (quantity > availableStock) {
       alert(`Only ${availableStock} item(s) available in stock.`);

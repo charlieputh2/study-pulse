@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom';
 import UniqueMenuItemCard from './UniqueMenuItemCard';
 import ProductDetailModal from './ProductDetailModal';
 import Pagination from './Pagination';
-import type { Product, ProductVariation, CartItem } from '../types';
+import type { Product, ProductVariation, CartItem, ProductOption } from '../types';
 import { Search, Package, Grid, List, X, Filter, ArrowRight } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import '../styles/animations.css';
 
 interface ProductsProps {
   menuItems: Product[];
-  addToCart: (product: Product, variation?: ProductVariation, quantity?: number) => void;
+  addToCart: (product: Product, variation?: ProductVariation, option?: ProductOption, quantity?: number) => void;
   cartItems: CartItem[];
   updateQuantity: (index: number, quantity: number) => void;
 }
@@ -106,8 +106,8 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredAndSortedItems.slice(startIndex, endIndex);
 
-  const handleAddToCart = (product: Product, variation?: ProductVariation, quantity: number = 1) => {
-    addToCart(product, variation, quantity);
+  const handleAddToCart = (product: Product, variation?: ProductVariation, option?: ProductOption, quantity: number = 1) => {
+    addToCart(product, variation, option, quantity);
   };
 
   const handleProductClick = (product: Product) => {

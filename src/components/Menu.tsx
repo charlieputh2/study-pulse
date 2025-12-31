@@ -8,13 +8,13 @@ import EnhancedWhyChooseStudyPulse from './EnhancedWhyChooseStudyPulse';
 import EnhancedFAQ from './EnhancedFAQ';
 import UniqueLocationSection from './UniqueLocationSection';
 import Pagination from './Pagination';
-import type { Product, ProductVariation, CartItem } from '../types';
+import type { Product, ProductVariation, ProductOption, CartItem } from '../types';
 import { Search, Package, Grid, List, X, Filter } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface MenuProps {
   menuItems: Product[];
-  addToCart: (product: Product, variation?: ProductVariation, quantity?: number) => void;
+  addToCart: (product: Product, variation?: ProductVariation, option?: ProductOption, quantity?: number) => void;
   cartItems: CartItem[];
   updateQuantity: (index: number, quantity: number) => void;
 }
@@ -107,8 +107,8 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
     localPriceRange[0] > 0 || localPriceRange[1] < maxPrice
   ].filter(Boolean).length;
 
-  const handleAddToCart = (product: Product, variation?: ProductVariation, quantity: number = 1) => {
-    addToCart(product, variation, quantity);
+  const handleAddToCart = (product: Product, variation?: ProductVariation, option?: ProductOption, quantity: number = 1) => {
+    addToCart(product, variation, option, quantity);
   };
 
   const handleProductClick = (product: Product) => {

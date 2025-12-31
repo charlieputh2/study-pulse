@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Truck, Calendar, ClipboardList, Search, Bell, ChevronDown, Sparkles, Zap, Shield } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, Menu, X, Truck, Calendar, ClipboardList, Search, Bell, ChevronDown, Sparkles, Zap, Shield, User, Beaker, FileText, Calculator, TestTube, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
   cartItemsCount: number;
@@ -9,6 +9,7 @@ interface HeaderProps {
 }
 
 const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClick }) => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -82,13 +83,13 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
 
             {/* Desktop Navigation - Unique Design */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <a
-                href="/"
+              <Link
+                to="/"
                 className="group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#1d4ed8] transition-all duration-300 rounded-xl hover:bg-blue-50"
               >
                 <span className="relative z-10">Home</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </a>
+              </Link>
               
               <Link
                 to="/products"
@@ -97,6 +98,61 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                 <span className="relative z-10">Products</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </Link>
+
+              {/* Research Dropdown Menu */}
+              <div className="relative group">
+                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#1d4ed8] transition-all duration-300 rounded-xl hover:bg-blue-50">
+                  <Beaker className="w-4 h-4" />
+                  Research
+                  <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                </button>
+                
+                {/* Research Dropdown Content */}
+                <div className="absolute top-full left-0 mt-2 w-80 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
+                  <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 p-4 space-y-2">
+                    <Link
+                      to="/research/studies"
+                      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
+                    >
+                      <BookOpen className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <div className="font-medium">Explore studies</div>
+                        <div className="text-xs text-gray-500">Browse research database</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/research/protocols"
+                      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
+                    >
+                      <FileText className="w-5 h-5 text-purple-500" />
+                      <div>
+                        <div className="font-medium">View guidelines</div>
+                        <div className="text-xs text-gray-500">Research protocols</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/calculator"
+                      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
+                    >
+                      <Calculator className="w-5 h-5 text-green-500" />
+                      <div>
+                        <div className="font-medium">Dosage tool</div>
+                        <div className="text-xs text-gray-500">Calculate dosages</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/lab-tests"
+                      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
+                    >
+                      <TestTube className="w-5 h-5 text-orange-500" />
+                      <div>
+                        <div className="font-medium">Quality reports</div>
+                        <div className="text-xs text-gray-500">Lab test results</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
 
               {/* Dropdown Menu - Unique Feature */}
               <div className="relative group">
@@ -108,8 +164,8 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                 {/* Dropdown Content */}
                 <div className="absolute top-full left-0 mt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
                   <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 p-4 space-y-2">
-                    <a
-                      href="/appointments"
+                    <Link
+                      to="/appointments"
                       className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
                     >
                       <Calendar className="w-5 h-5 text-blue-500" />
@@ -117,9 +173,9 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                         <div className="font-medium">Appointments</div>
                         <div className="text-xs text-gray-500">Schedule consultation</div>
                       </div>
-                    </a>
-                    <a
-                      href="/orders"
+                    </Link>
+                    <Link
+                      to="/orders"
                       className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
                     >
                       <ClipboardList className="w-5 h-5 text-purple-500" />
@@ -127,9 +183,9 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                         <div className="font-medium">Orders</div>
                         <div className="text-xs text-gray-500">View order history</div>
                       </div>
-                    </a>
-                    <a
-                      href="/tracking"
+                    </Link>
+                    <Link
+                      to="/tracking"
                       className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
                     >
                       <Truck className="w-5 h-5 text-green-500" />
@@ -137,26 +193,26 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                         <div className="font-medium">Tracking</div>
                         <div className="text-xs text-gray-500">Real-time tracking</div>
                       </div>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
             </nav>
 
             {/* Right Side Actions - Unique Design */}
-            <div className="flex items-center gap-2 lg:gap-4">
-              {/* Search Button - Desktop */}
+            <div className="flex items-center gap-2 lg:gap-4 flex-shrink-0">
+              {/* Login Button - Desktop */}
               <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300"
+                onClick={() => {
+                  console.log('Login button clicked');
+                  window.location.href = '/login';
+                }}
+                className="hidden lg:flex items-center gap-2 px-3 h-12 rounded-xl bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 transition-all duration-300 group hover:scale-105 cursor-pointer"
+                title="Login / Register"
+                type="button"
               >
-                <Search className="w-5 h-5" />
-              </button>
-
-              {/* Notifications - Unique Feature */}
-              <button className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                <User className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium">Login</span>
               </button>
 
               {/* Cart Button - Redesigned */}
@@ -174,11 +230,24 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                 )}
               </button>
 
+              {/* Search Button - Desktop */}
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+
+              {/* Notifications - Unique Feature */}
+              <button className="hidden lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300 relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
               
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300"
+                className="lg:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-all duration-300"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -265,8 +334,8 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
             {/* Navigation Items */}
             <nav className="flex-1 overflow-y-auto p-4">
               <div className="space-y-2">
-                <a
-                  href="/"
+                <Link
+                  to="/"
                   className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -277,7 +346,7 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                     <div className="font-medium text-white">Home</div>
                     <div className="text-xs text-blue-300">Welcome page</div>
                   </div>
-                </a>
+                </Link>
 
                 <Link
                   to="/products"
@@ -293,8 +362,69 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                   </div>
                 </Link>
 
-                <a
-                  href="/appointments"
+                {/* Research Section - Mobile */}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Beaker className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-white">Research</div>
+                      <div className="text-xs text-blue-300">Scientific resources</div>
+                    </div>
+                  </div>
+                  
+                  {/* Research Sub-items */}
+                  <div className="ml-14 space-y-1">
+                    <Link
+                      to="/research/studies"
+                      className="flex items-center gap-3 p-3 rounded-xl text-blue-300 hover:bg-white/5 hover:text-white transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <BookOpen className="w-4 h-4 text-blue-400" />
+                      <div>
+                        <div className="text-sm text-white">Explore studies</div>
+                        <div className="text-xs text-blue-400">Browse research database</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/research/protocols"
+                      className="flex items-center gap-3 p-3 rounded-xl text-blue-300 hover:bg-white/5 hover:text-white transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <FileText className="w-4 h-4 text-purple-400" />
+                      <div>
+                        <div className="text-sm text-white">View guidelines</div>
+                        <div className="text-xs text-blue-400">Research protocols</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/calculator"
+                      className="flex items-center gap-3 p-3 rounded-xl text-blue-300 hover:bg-white/5 hover:text-white transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Calculator className="w-4 h-4 text-green-400" />
+                      <div>
+                        <div className="text-sm text-white">Dosage tool</div>
+                        <div className="text-xs text-blue-400">Calculate dosages</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/lab-tests"
+                      className="flex items-center gap-3 p-3 rounded-xl text-blue-300 hover:bg-white/5 hover:text-white transition-all"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <TestTube className="w-4 h-4 text-orange-400" />
+                      <div>
+                        <div className="text-sm text-white">Quality reports</div>
+                        <div className="text-xs text-blue-400">Lab test results</div>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                <Link
+                  to="/appointments"
                   className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -305,10 +435,10 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                     <div className="font-medium text-white">Appointments</div>
                     <div className="text-xs text-blue-300">Book consultation</div>
                   </div>
-                </a>
+                </Link>
 
-                <a
-                  href="/orders"
+                <Link
+                  to="/orders"
                   className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -319,10 +449,10 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                     <div className="font-medium text-white">Orders</div>
                     <div className="text-xs text-blue-300">Order history</div>
                   </div>
-                </a>
+                </Link>
 
-                <a
-                  href="/tracking"
+                <Link
+                  to="/tracking"
                   className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -333,9 +463,29 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                     <div className="font-medium text-white">Tracking</div>
                     <div className="text-xs text-blue-300">Real-time tracking</div>
                   </div>
-                </a>
+                </Link>
               </div>
             </nav>
+
+            {/* Login Button - Mobile */}
+            <div className="p-4 border-t border-blue-400/20">
+              <button
+                onClick={() => {
+                  console.log('Mobile login button clicked');
+                  navigate('/login');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white transition-all group"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="font-medium text-white">Login / Register</div>
+                  <div className="text-xs text-blue-300">Access your account</div>
+                </div>
+              </button>
+            </div>
 
             {/* Footer */}
             <div className="p-4 border-t border-blue-400/20">
