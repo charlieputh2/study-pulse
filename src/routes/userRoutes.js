@@ -1,6 +1,7 @@
 import express from 'express';
 import userService from '../services/userService.js';
 import emailService from '../services/emailService.js';
+import userProfileService from '../services/userProfileService.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -100,13 +101,25 @@ router.post('/register', upload.single('photo'), async (req, res) => {
     const result = await userService.registerUser(userData);
 
     if (result.success) {
+      // Create user profile in Supabase
+      console.log('Creating user profile in Supabase for:', userData.email);
+      const profileResult = await userProfileService.createUserProfile(userData);
+      
+      if (profileResult.success) {
+        console.log('User profile created in Supabase successfully');
+      } else {
+        console.error('Failed to create user profile in Supabase:', profileResult.error);
+        // Don't fail registration if Supabase fails, but log the error
+      }
+      
       // Send welcome email
       await emailService.sendWelcomeEmail(userData.email, userData.fullName);
       
       res.status(201).json({
         success: true,
         message: 'Registration successful! Please check your email for confirmation.',
-        user: result.user
+        user: result.user,
+        profileCreated: profileResult.success
       });
     } else {
       res.status(400).json(result);
@@ -117,6 +130,35 @@ router.post('/register', upload.single('photo'), async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Internal server error during registration' 
+    });
+  }
+});
+
+// Test Supabase connection
+router.get('/test-supabase', async (req, res) => {
+  try {
+    const userProfileService = await import('../services/userProfileService.js');
+    const profileService = userProfileService.default;
+    
+    // Test creating a profile
+    const testData = {
+      email: 'test@example.com',
+      fullName: 'Test User'
+    };
+    
+    const result = await profileService.createUserProfile(testData);
+    
+    res.json({
+      success: true,
+      message: 'Supabase connection test completed',
+      result: result
+    });
+  } catch (error) {
+    console.error('Supabase test error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Supabase connection failed',
+      error: error.message
     });
   }
 });

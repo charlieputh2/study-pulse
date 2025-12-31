@@ -10,6 +10,39 @@
       "updatedAt": "2025-12-31T14:26:19.233Z",
       "isActive": true,
       "role": "user"
+    },
+    {
+      "id": "1767207674924",
+      "email": "bboyzapico@gmail.com",
+      "fullName": "Bboy Zapico",
+      "password": "Bboy12345",
+      "photo": null,
+      "createdAt": "2025-12-31T19:01:14.928Z",
+      "updatedAt": "2025-12-31T19:01:14.963Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1767208190718",
+      "email": "cardo@gmail.com",
+      "fullName": "CARDO DALISAY",
+      "password": "bBOY12345",
+      "photo": null,
+      "createdAt": "2025-12-31T19:09:50.721Z",
+      "updatedAt": "2025-12-31T19:09:50.723Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1767211561066",
+      "email": "charkue@gmail.com",
+      "fullName": "cARKE",
+      "password": "BBOY12345",
+      "photo": null,
+      "createdAt": "2025-12-31T20:06:01.070Z",
+      "updatedAt": "2025-12-31T20:06:01.071Z",
+      "isActive": true,
+      "role": "user"
     }
   ]
 }
