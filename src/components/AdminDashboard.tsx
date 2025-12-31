@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, FolderOpen, CreditCard, Sparkles, Layers, Shield, RefreshCw, Warehouse, ShoppingCart, HelpCircle, MapPin, Settings, Tag, BookOpen } from 'lucide-react';
 import type { Product } from '../types';
 import { useMenu } from '../hooks/useMenu';
@@ -18,6 +18,9 @@ import GuideManager from './GuideManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
 import { Calendar, BarChart3 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import AdminSidebar from './AdminSidebar';
+import AdminHeader from './AdminHeader';
+import AdminDashboardCards from './AdminDashboardCards';
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('peptide_admin_auth') === 'true';
@@ -27,12 +30,88 @@ const AdminDashboard: React.FC = () => {
   const { products, loading, addProduct, updateProduct, deleteProduct, refreshProducts } = useMenu();
   const { categories } = useCategories();
   const [currentView, setCurrentView] = useState<'dashboard' | 'products' | 'add' | 'edit' | 'categories' | 'payments' | 'inventory' | 'orders' | 'shipping' | 'coa' | 'faq' | 'settings' | 'promo-codes' | 'guides' | 'analytics'>('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [managingVariationsProductId, setManagingVariationsProductId] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Responsive detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle view changes
+  const handleViewChange = (view: string) => {
+    if (view === 'add-product') {
+      handleAddProduct();
+    } else if (view === 'manage-products') {
+      setCurrentView('products');
+    } else {
+      setCurrentView(view as any);
+    }
+  };
+
+  // Get page info for header
+  const getPageInfo = () => {
+    const pageMap: Record<string, { title: string; subtitle?: string; breadcrumbs?: { label: string; href?: string }[] }> = {
+      dashboard: {
+        title: 'Dashboard',
+        subtitle: 'Welcome back! Here\'s what\'s happening with your store.',
+        breadcrumbs: [{ label: 'Dashboard' }]
+      },
+      products: {
+        title: 'Products',
+        subtitle: 'Manage your product inventory',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Products' }]
+      },
+      add: {
+        title: 'Add New Product',
+        subtitle: 'Create a new product listing',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Products', href: '#' }, { label: 'Add New' }]
+      },
+      edit: {
+        title: 'Edit Product',
+        subtitle: 'Update product information',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Products', href: '#' }, { label: 'Edit' }]
+      },
+      categories: {
+        title: 'Categories',
+        subtitle: 'Manage product categories',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Categories' }]
+      },
+      orders: {
+        title: 'Orders',
+        subtitle: 'Manage customer orders',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Orders' }]
+      },
+      analytics: {
+        title: 'Analytics',
+        subtitle: 'Sales reports and insights',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Analytics' }]
+      },
+      settings: {
+        title: 'Settings',
+        subtitle: 'Configure your store settings',
+        breadcrumbs: [{ label: 'Dashboard', href: '#' }, { label: 'Settings' }]
+      },
+    };
+
+    return pageMap[currentView] || pageMap.dashboard;
+  };
 
   const variationManagerProduct = managingVariationsProductId
     ? products.find((product) => product.id === managingVariationsProductId) || null
@@ -453,45 +532,59 @@ const AdminDashboard: React.FC = () => {
 
   // Form View (Add/Edit)
   if (currentView === 'add' || currentView === 'edit') {
+    const pageInfo = getPageInfo();
+    
     return (
       <>
         {variationManagerModal}
-        <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-          <div className="bg-white shadow-md border-b border-gray-200">
-            <div className="max-w-6xl mx-auto px-3 sm:px-4">
-              <div className="flex items-center justify-between h-12 md:h-14 gap-2">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleCancel}
-                    className="text-gray-700 hover:text-theme-accent transition-colors flex items-center gap-1 group"
-                  >
-                    <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs md:text-sm">Back</span>
-                  </button>
-                  <h1 className="text-sm md:text-base font-bold text-navy-900">
-                    {currentView === 'add' ? '✨ Add New' : '✏️ Edit Product'}
-                  </h1>
-                </div>
-                <div className="flex space-x-1.5">
-                  <button onClick={handleCancel} className="px-2 py-1 border border-gray-300 hover:border-gray-400 rounded-md hover:bg-gray-50 transition-all flex items-center gap-1 text-xs">
-                    <X className="h-3 w-3" />
-                    <span className="hidden sm:inline">Cancel</span>
-                  </button>
-                  <button
-                    onClick={handleSaveProduct}
-                    disabled={isProcessing}
-                    className="bg-theme-accent hover:bg-theme-accent/90 text-white px-2 md:px-3 py-1 rounded-md transition-all flex items-center gap-1 shadow-sm hover:shadow disabled:opacity-50 text-xs"
-                  >
-                    <Save className="h-3 w-3" />
-                    {isProcessing ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Sidebar */}
+          <AdminSidebar
+            currentView={currentView}
+            onViewChange={handleViewChange}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isMobile={isMobile}
+            onMobileClose={() => setIsMobileSidebarOpen(false)}
+          />
 
-          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 md:py-4">
-            <div className="bg-white rounded-lg md:rounded-xl shadow-lg p-3 md:p-4 lg:p-5 space-y-3 md:space-y-4 border border-gray-200">
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col lg:ml-0">
+            {/* Header */}
+            <AdminHeader
+              title={pageInfo.title}
+              subtitle={pageInfo.subtitle}
+              breadcrumbs={pageInfo.breadcrumbs}
+              onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              onLogout={handleLogout}
+              showSearch={false}
+            />
+
+            {/* Page Content */}
+            <main className="flex-1 p-6">
+              <div className="max-w-4xl mx-auto">
+                {/* Action Bar */}
+                <div className="mb-6 flex justify-end">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={handleCancel}
+                      className="bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-2 font-medium text-sm transition-all flex items-center gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveProduct}
+                      disabled={isProcessing}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <Save className="h-4 w-4" />
+                      {isProcessing ? 'Saving...' : 'Save Product'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
               {/* Basic Information */}
               <div>
                 <h3 className="text-sm md:text-base font-bold text-gray-900 mb-2 md:mb-3 flex items-center gap-1.5">
@@ -785,81 +878,94 @@ const AdminDashboard: React.FC = () => {
 
             </div>
           </div>
+        </main>
         </div>
-      </>
+      </div>
+    </>
     );
   }
 
   // Products List View
   if (currentView === 'products') {
+    const pageInfo = getPageInfo();
+    
     return (
       <>
         {variationManagerModal}
-        <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
-          <div className="bg-white shadow-md border-b border-gray-200">
-            <div className="max-w-6xl mx-auto px-3 sm:px-4">
-              <div className="flex items-center justify-between h-12 md:h-14">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setCurrentView('dashboard')}
-                    className="text-gray-700 hover:text-theme-accent transition-colors flex items-center gap-1 group"
-                  >
-                    <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs md:text-sm">Dashboard</span>
-                  </button>
-                  <h1 className="text-sm md:text-base font-bold text-navy-900">Products</h1>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className="bg-navy-900 hover:bg-navy-800 text-white px-2 py-1 rounded-md font-medium text-xs shadow-sm hover:shadow transition-all flex items-center gap-1 disabled:opacity-50 border border-navy-900/20"
-                    title="Refresh data"
-                  >
-                    <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
-                  </button>
-                  {selectedProducts.size > 0 && (
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Sidebar */}
+          <AdminSidebar
+            currentView={currentView}
+            onViewChange={handleViewChange}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isMobile={isMobile}
+            onMobileClose={() => setIsMobileSidebarOpen(false)}
+          />
+
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col lg:ml-0">
+            {/* Header */}
+            <AdminHeader
+              title={pageInfo.title}
+              subtitle={pageInfo.subtitle}
+              breadcrumbs={pageInfo.breadcrumbs}
+              onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+              onLogout={handleLogout}
+              showSearch={true}
+            />
+
+            {/* Page Content */}
+            <main className="flex-1 p-6">
+              <div className="max-w-7xl mx-auto">
+                {/* Action Bar */}
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={handleBulkDelete}
-                      disabled={isProcessing}
-                      className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 md:px-3 py-1 rounded-md font-medium text-xs shadow-sm hover:shadow transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className="bg-white border border-gray-300 hover:border-gray-400 rounded-lg px-4 py-2 font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                      title="Refresh data"
                     >
-                      <Trash2 className="h-3 w-3" />
-                      <span className="hidden sm:inline">Delete ({selectedProducts.size})</span>
-                      <span className="sm:hidden">Delete</span>
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      {isRefreshing ? 'Refreshing...' : 'Refresh'}
                     </button>
-                  )}
+                    {selectedProducts.size > 0 && (
+                      <button
+                        onClick={handleBulkDelete}
+                        disabled={isProcessing}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete ({selectedProducts.size})
+                      </button>
+                    )}
+                  </div>
                   <button
                     onClick={handleAddProduct}
-                    className="bg-theme-accent hover:bg-theme-accent/90 text-white px-2 md:px-3 py-1 rounded-md font-medium text-xs shadow-sm hover:shadow transition-all flex items-center gap-1"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2"
                   >
-                    <Plus className="h-3 w-3" />
-                    <span className="hidden sm:inline">Add New</span>
-                    <span className="sm:hidden">Add</span>
+                    <Plus className="h-4 w-4" />
+                    Add New Product
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 md:py-4">
-            {/* Selection Info Banner */}
-            {selectedProducts.size > 0 && (
-              <div className="mb-3 bg-gray-50 border border-gray-200 rounded-lg p-2 md:p-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs md:text-sm font-semibold text-gray-900">
-                    {selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''} selected
-                  </span>
-                </div>
-                <button
-                  onClick={() => setSelectedProducts(new Set())}
-                  className="text-xs text-theme-accent hover:text-gold-700 font-medium underline"
-                >
-                  Clear Selection
-                </button>
-              </div>
-            )}
+                {/* Selection Info Banner */}
+                {selectedProducts.size > 0 && (
+                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-blue-900">
+                        {selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''} selected
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedProducts(new Set())}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                )}
 
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
@@ -1069,8 +1175,10 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </main>
         </div>
-      </>
+      </div>
+    </>
     );
   }
 
@@ -1174,261 +1282,47 @@ const AdminDashboard: React.FC = () => {
   }
 
   // Dashboard View
+  const pageInfo = getPageInfo();
+  
   return (
     <>
       {variationManagerModal}
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-md border-b-4 border-navy-900">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex items-center justify-between h-14">
-              <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-full overflow-hidden border border-navy-900/20">
-                  <img
-                    src="/logoo.jpg"
-                    alt="StudyPulse"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-navy-900">StudyPulse</p>
-                  <p className="text-xs text-gray-500">Admin Dashboard</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <a
-                  href="/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-theme-accent transition-colors font-medium text-sm hidden sm:block"
-                >
-                  View Website
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="bg-navy-900 hover:bg-navy-800 text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm shadow-sm"
-                >
-                  Logout
-                </button>
-              </div>
+      <div className="min-h-screen bg-gray-50 flex">
+        {/* Sidebar */}
+        <AdminSidebar
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isMobile={isMobile}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col lg:ml-0">
+          {/* Header */}
+          <AdminHeader
+            title={pageInfo.title}
+            subtitle={pageInfo.subtitle}
+            breadcrumbs={pageInfo.breadcrumbs}
+            onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            onLogout={handleLogout}
+          />
+
+          {/* Page Content */}
+          <main className="flex-1 p-6">
+            <div className="max-w-7xl mx-auto">
+              <AdminDashboardCards
+                stats={{
+                  totalProducts,
+                  availableProducts,
+                  featuredProducts,
+                  totalCategories: categories.length,
+                }}
+                onNavigate={handleViewChange}
+              />
             </div>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 py-4">
-
-          {/* Inventory Stats */}
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-navy-900 flex items-center gap-2 mb-4">
-              <Calendar className="w-5 h-5" />
-              Inventory Overview
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <button
-                onClick={() => setCurrentView('products')}
-                className="bg-white rounded-xl shadow-soft hover:shadow-md transition-all p-4 border border-gray-100 text-left cursor-pointer"
-              >
-                <div className="flex items-center">
-                  <div className="p-2 bg-theme-accent/10 rounded-lg">
-                    <Package className="h-4 w-4 text-theme-accent" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-xs font-medium text-gray-500">Total Products</p>
-                    <p className="text-xl font-bold text-theme-text">{totalProducts}</p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setCurrentView('products')}
-                className="bg-white rounded-xl shadow-soft hover:shadow-md transition-all p-4 border border-gray-100 text-left cursor-pointer"
-              >
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-xs font-medium text-gray-500">Available</p>
-                    <p className="text-xl font-bold text-green-600">{availableProducts}</p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setCurrentView('products')}
-                className="bg-white rounded-xl shadow-soft hover:shadow-md transition-all p-4 border border-gray-100 text-left cursor-pointer"
-              >
-                <div className="flex items-center">
-                  <div className="p-2 bg-theme-secondary/10 rounded-lg">
-                    <Sparkles className="h-4 w-4 text-theme-secondary" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-xs font-medium text-gray-500">Featured</p>
-                    <p className="text-xl font-bold text-theme-secondary">{featuredProducts}</p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => setCurrentView('categories')}
-                className="bg-white rounded-xl shadow-soft hover:shadow-md transition-all p-4 border border-gray-100 text-left cursor-pointer"
-              >
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Users className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-xs font-medium text-gray-500">Categories</p>
-                    <p className="text-xl font-bold text-blue-600">{categories.length}</p>
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl shadow-soft p-4 border border-gray-100">
-              <h3 className="text-base font-bold text-theme-text mb-3">
-                Quick Actions
-              </h3>
-              <div className="space-y-1">
-                <button
-                  onClick={handleAddProduct}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-navy-50 rounded-lg">
-                    <Plus className="h-4 w-4 text-navy-900" />
-                  </div>
-                  <span className="text-sm font-medium text-navy-900">Add New Product</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('products')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-navy-50 rounded-lg">
-                    <Package className="h-4 w-4 text-navy-900" />
-                  </div>
-                  <span className="text-sm font-medium text-navy-900">Manage Products</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('categories')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-blue-50 rounded-lg">
-                    <FolderOpen className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Manage Categories</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('payments')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-purple-50 rounded-lg">
-                    <CreditCard className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Payment Methods</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('inventory')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-orange-50 rounded-lg">
-                    <Warehouse className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Pulse Inventory</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('orders')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-navy-50 rounded-lg">
-                    <ShoppingCart className="h-4 w-4 text-navy-900" />
-                  </div>
-                  <span className="text-sm font-medium text-navy-900">Orders Management</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('analytics')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-theme-accent/10 rounded-lg">
-                    <BarChart3 className="h-4 w-4 text-theme-accent" />
-                  </div>
-                  <span className="text-sm font-medium text-theme-accent">Sales Analytics</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('shipping')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-green-50 rounded-lg">
-                    <MapPin className="h-4 w-4 text-green-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Shipping Locations</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('coa')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-navy-50 rounded-lg">
-                    <Shield className="h-4 w-4 text-navy-900" />
-                  </div>
-                  <span className="text-sm font-medium text-navy-900">Lab Results (COA)</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('faq')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-navy-50 rounded-lg">
-                    <HelpCircle className="h-4 w-4 text-navy-900" />
-                  </div>
-                  <span className="text-sm font-medium text-navy-900">Manage FAQ</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('promo-codes')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-green-50 rounded-lg">
-                    <Tag className="h-4 w-4 text-green-700" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Promo Codes</span>
-                </button>
-                <button
-                  onClick={() => setCurrentView('settings')}
-                  className="w-full flex items-center gap-3 p-2 text-left hover:bg-gray-50 rounded-lg transition-all"
-                >
-                  <div className="p-1.5 bg-gray-100 rounded-lg">
-                    <Settings className="h-4 w-4 text-gray-700" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">Site Settings</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-soft p-4 border border-gray-100">
-              <h3 className="text-base font-bold text-theme-text mb-3">
-                Categories Overview
-              </h3>
-              <div className="space-y-2">
-                {categoryCounts.map((category, index) => {
-                  const bgColors = [
-                    'bg-theme-accent',
-                    'bg-theme-secondary',
-                    'bg-blue-500',
-                    'bg-green-500',
-                    'bg-purple-500',
-                    'bg-orange-500'
-                  ];
-                  return (
-                    <div key={category.id} className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 rounded-lg transition-all">
-                      <span className="text-sm font-medium text-gray-700">{category.name}</span>
-                      <span className={`text-xs font-bold text-white ${bgColors[index % bgColors.length]} px-2.5 py-1 rounded-full`}>
-                        {category.count}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          </main>
         </div>
       </div>
     </>
