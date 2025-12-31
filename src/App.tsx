@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
 import { useCart } from './hooks/useCart';
 import UniqueHeader from './components/UniqueHeader';
 import Menu from './components/Menu';
@@ -13,20 +13,42 @@ import Protocols from './components/Protocols';
 import COA from './components/COA';
 import FAQ from './components/FAQ';
 import PeptideCalculator from './components/PeptideCalculator';
-import OrderTracking from './components/OrderTracking';
+import OrderTrackingPage from './components/OrderTrackingPage';
 import SmartGuide from './components/SmartGuide';
 import ArticleDetail from './components/ArticleDetail';
 import TestConnection from './components/TestConnection';
-import Orders from './components/Orders';
+import OrdersPage from './components/OrdersPage';
+import ProductsPage from './components/ProductsPage';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
 function MainApp() {
   const cart = useCart();
   const { menuItems } = useMenu();
-  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>('menu');
+  const [searchParams] = useSearchParams();
+  const viewParam = searchParams.get('view');
+  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>(viewParam === 'cart' ? 'cart' : 'menu');
+  
+  React.useEffect(() => {
+    if (viewParam === 'cart') {
+      setCurrentView('cart');
+    } else if (viewParam === 'checkout') {
+      setCurrentView('checkout');
+    } else {
+      setCurrentView('menu');
+    }
+  }, [viewParam]);
+  
   const handleViewChange = (view: 'menu' | 'cart' | 'checkout') => {
     setCurrentView(view);
+    // Update URL
+    const newParams = new URLSearchParams(searchParams);
+    if (view === 'menu') {
+      newParams.delete('view');
+    } else {
+      newParams.set('view', view);
+    }
+    window.history.pushState({}, '', `/?${newParams.toString()}`);
     // Scroll to top when changing views
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -94,14 +116,15 @@ function App() {
         <Route path="/coa" element={<COA />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/calculator" element={<PeptideCalculator />} />
-        <Route path="/order-tracking" element={<OrderTracking />} />
-        <Route path="/tracking" element={<OrderTracking />} />
+        <Route path="/order-tracking" element={<OrderTrackingPage />} />
+        <Route path="/tracking" element={<OrderTrackingPage />} />
         <Route path="/smart-guide" element={<SmartGuide />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
         <Route path="/test-connection" element={<TestConnection />} />
         <Route path="/research" element={<Research />} />
         <Route path="/protocols" element={<Protocols />} />
-        <Route path="/orders" element={<Orders />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>

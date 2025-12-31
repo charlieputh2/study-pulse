@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Product, ProductVariation } from '../types';
-import { ShoppingCart, Heart, Eye, Star, Zap, Shield, Award, TrendingUp, ChevronDown, Plus, Minus, Sparkles } from 'lucide-react';
+import { ShoppingCart, Heart, Eye, Star, Zap, Shield, Award, TrendingUp, Plus, Minus } from 'lucide-react';
 
 interface MenuItemCardProps {
   product: Product;
@@ -43,20 +43,8 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
           className="max-h-full max-w-full object-contain transition-all duration-700 group-hover:scale-110 relative z-10"
         />
 
-        {/* Enhanced Badges */}
-        <div className="absolute top-3 left-3 flex flex-col space-y-2 z-20">
-          {product.featured && (
-            <div className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-full shadow-lg">
-              <Sparkles className="w-3 h-3" />
-              Featured
-            </div>
-          )}
-          {hasDiscount && (
-            <div className="px-3 py-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
-              {Math.round(((displayOriginalPrice! - displayPrice) / displayOriginalPrice!) * 100)}% OFF
-            </div>
-          )}
-        </div>
+        {/* Enhanced Badges - REMOVED to prevent duplication */}
+        {/* Badges are now handled in Products.tsx */}
 
         {/* Quick Actions */}
         <div className={`absolute top-3 right-3 flex flex-col space-y-2 z-20 transition-all duration-300 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
@@ -157,17 +145,26 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
         <div className="mb-4">
           <div className="flex items-baseline gap-2">
             <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {displayPrice}
+              ₱{displayPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             {hasDiscount && displayOriginalPrice && (
               <>
                 <span className="text-lg text-gray-400 line-through">
-                  {displayOriginalPrice}
+                  ₱{displayOriginalPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                  Save {displayOriginalPrice - displayPrice}
+                  Save ₱{(displayOriginalPrice - displayPrice).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </>
+            )}
+          </div>
+          
+          {/* Price Per Unit/Info */}
+          <div className="text-sm text-gray-500 mt-1">
+            {selectedVariation ? (
+              <span>{selectedVariation.name || 'Standard Variation'}</span>
+            ) : (
+              <span>Per Unit</span>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useCOAPageSetting } from '../hooks/useCOAPageSetting';
-import { ShoppingCart, Menu, X, Truck, Calendar, ClipboardList, Search, Bell, User, ChevronDown, Sparkles, Zap, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, Menu, X, Truck, Calendar, ClipboardList, Search, Bell, ChevronDown, Sparkles, Zap, Shield } from 'lucide-react';
 
 interface HeaderProps {
   cartItemsCount: number;
@@ -12,8 +12,6 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const { coaPageEnabled } = useCOAPageSetting();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -92,13 +90,13 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </a>
               
-              <button
-                onClick={onMenuClick}
+              <Link
+                to="/products"
                 className="group relative px-4 py-2 text-sm font-medium text-gray-700 hover:text-[#1d4ed8] transition-all duration-300 rounded-xl hover:bg-blue-50"
               >
                 <span className="relative z-10">Products</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </button>
+              </Link>
 
               {/* Dropdown Menu - Unique Feature */}
               <div className="relative group">
@@ -281,12 +279,10 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                   </div>
                 </a>
 
-                <button
-                  onClick={() => {
-                    onMenuClick();
-                    setMobileMenuOpen(false);
-                  }}
+                <Link
+                  to="/products"
                   className="w-full flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
+                  onClick={() => setMobileMenuOpen(false)}
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                     <ShoppingCart className="w-5 h-5 text-purple-400" />
@@ -295,7 +291,7 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                     <div className="font-medium text-white">Products</div>
                     <div className="text-xs text-blue-300">Browse catalog</div>
                   </div>
-                </button>
+                </Link>
 
                 <a
                   href="/appointments"

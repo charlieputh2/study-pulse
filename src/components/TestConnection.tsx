@@ -1,18 +1,50 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const TestConnection = () => {
-  const [status, setStatus] = useState('Testing connection...');
-  const [error, setError] = useState('');
-  const [data, setData] = useState<any>(null);
+// Define the Product type based on your database schema
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price?: number;
+  category?: string;
+  // Add other product fields as needed
+}
+
+// Define the shape of the auth data
+interface AuthData {
+  session: {
+    access_token: string;
+    refresh_token: string;
+    user: {
+      id: string;
+      email?: string;
+      // Add other user fields as needed
+    };
+  } | null;
+}
+
+const TestConnection: React.FC = () => {
+  const [status, setStatus] = useState<string>('Testing connection...');
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<{
+    auth: AuthData | null;
+    products: Product[] | null;
+  } | null>(null);
 
   useEffect(() => {
     const testConnection = async () => {
       try {
+        setStatus('🔍 Testing authentication...');
+        
         // Test authentication
         const { data: authData, error: authError } = await supabase.auth.getSession();
         
-        if (authError) throw authError;
+        if (authError) {
+          throw new Error(`Authentication failed: ${authError.message}`);
+        }
+
+        setStatus('🔍 Testing database connection...');
         
         // Test database query
         const { data: dbData, error: dbError } = await supabase
@@ -20,16 +52,19 @@ const TestConnection = () => {
           .select('*')
           .limit(1);
           
-        if (dbError) throw dbError;
-        
+        if (dbError) {
+          throw new Error(`Database query failed: ${dbError.message}`);
+        }
+
         setStatus('✅ Connection successful!');
         setData({
           auth: authData,
           products: dbData
         });
       } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         setStatus('❌ Connection failed');
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setError(errorMessage);
         console.error('Connection test failed:', err);
       }
     };
@@ -59,10 +94,6 @@ const TestConnection = () => {
           </div>
         </div>
       )}
-      
-      <div className="mt-6 text-sm text-gray-600">
-        <p>Check the browser console for detailed logs.</p>
-      </div>
     </div>
   );
 };

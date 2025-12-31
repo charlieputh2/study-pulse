@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Package, CheckCircle, XCircle, Clock, Truck, AlertCircle, Search, RefreshCw, Eye, MessageCircle, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Package, CheckCircle, XCircle, Clock, Truck, AlertCircle, Search, RefreshCw, Eye, Image as ImageIcon, Download, Filter, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMenu } from '../hooks/useMenu';
 
@@ -54,6 +54,11 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [dateFilter, setDateFilter] = useState<string>('all');
+  const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { refreshProducts } = useMenu();
 
   useEffect(() => {
@@ -266,6 +271,39 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
       filtered = filtered.filter(o => o.order_status === statusFilter);
     }
 
+    // Filter by payment status
+    if (paymentFilter !== 'all') {
+      filtered = filtered.filter(o => o.payment_status === paymentFilter);
+    }
+
+    // Filter by date
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+      filtered = filtered.filter(o => {
+        const orderDate = new Date(o.created_at);
+        switch (dateFilter) {
+          case 'today':
+            return orderDate >= today;
+          case 'yesterday':
+            return orderDate >= yesterday && orderDate < today;
+          case 'week':
+            return orderDate >= lastWeek;
+          case 'month':
+            return orderDate >= lastMonth;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -273,12 +311,35 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
         o.customer_name.toLowerCase().includes(query) ||
         o.customer_email.toLowerCase().includes(query) ||
         o.customer_phone.includes(query) ||
-        o.id.toLowerCase().includes(query)
+        o.id.toLowerCase().includes(query) ||
+        (o.tracking_number && o.tracking_number.toLowerCase().includes(query))
       );
     }
 
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortBy as keyof Order];
+      let bValue: any = b[sortBy as keyof Order];
+      
+      if (sortBy === 'created_at' || sortBy === 'updated_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+      
+      if (sortBy === 'total_price') {
+        aValue = parseFloat(aValue);
+        bValue = parseFloat(bValue);
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
     return filtered;
-  }, [orders, statusFilter, searchQuery]);
+  }, [orders, statusFilter, paymentFilter, dateFilter, searchQuery, sortBy, sortOrder]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -291,6 +352,36 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
       cancelled: orders.filter(o => o.order_status === 'cancelled').length,
     };
   }, [orders]);
+
+  const totalRevenue = useMemo(() => {
+    return orders
+      .filter(o => o.payment_status === 'paid')
+      .reduce((sum, o) => sum + o.total_price + (o.shipping_fee || 0), 0);
+  }, [orders]);
+
+  const exportOrders = () => {
+    const csvContent = [
+      ['Order ID', 'Customer Name', 'Email', 'Phone', 'Status', 'Payment Status', 'Total', 'Created At'],
+      ...filteredOrders.map(order => [
+        order.id.slice(0, 8).toUpperCase(),
+        order.customer_name,
+        order.customer_email,
+        order.customer_phone,
+        order.order_status,
+        order.payment_status,
+        `₱${(order.total_price + (order.shipping_fee || 0)).toLocaleString()}`,
+        new Date(order.created_at).toLocaleString()
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -371,14 +462,14 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 md:py-4 lg:py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3 mb-4 md:mb-6">
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3 mb-4 md:mb-6">
           <button
             onClick={() => setStatusFilter('all')}
             className={`bg-white rounded-lg md:rounded-xl shadow-md hover:shadow-lg p-2 md:p-3 lg:p-4 border-2 transition-all ${statusFilter === 'all' ? 'border-navy-900 shadow-gold-glow' : 'border-gray-200 hover:border-navy-700'
               }`}
           >
-            <p className="text-[10px] md:text-xs text-gray-600 mb-1">All Orders</p>
+            <p className="text-[10px] md:text-xs text-gray-600 mb-1">All</p>
             <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900">{statusCounts.all}</p>
           </button>
           <button
@@ -429,21 +520,103 @@ const OrdersManager: React.FC<OrdersManagerProps> = ({ onBack }) => {
             <p className="text-[10px] md:text-xs text-gray-600 mb-1">Cancelled</p>
             <p className="text-lg md:text-xl lg:text-2xl font-bold text-red-600">{statusCounts.cancelled}</p>
           </button>
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg md:rounded-xl shadow-md hover:shadow-lg p-2 md:p-3 lg:p-4 border-2 border-green-600">
+            <p className="text-[10px] md:text-xs opacity-90 mb-1">Revenue</p>
+            <p className="text-lg md:text-xl lg:text-2xl font-bold">₱{totalRevenue.toLocaleString()}</p>
+          </div>
         </div>
 
-        {/* Search */}
+        {/* Enhanced Search and Filters */}
         <div className="bg-white rounded-lg md:rounded-xl shadow-lg p-3 md:p-4 lg:p-6 mb-4 md:mb-6 border border-navy-700/30">
-          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5" />
-              <input
-                type="text"
-                placeholder="Search by customer name, email, phone, or order ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:border-navy-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20 transition-colors"
-              />
+          <div className="flex flex-col gap-4">
+            {/* Main Search */}
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5" />
+                <input
+                  type="text"
+                  placeholder="Search by customer name, email, phone, order ID, or tracking number..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:border-navy-900 focus:outline-none focus:ring-2 focus:ring-gold-500/20 transition-colors"
+                />
+              </div>
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all flex items-center gap-2 ${
+                  showAdvancedFilters 
+                    ? 'bg-navy-900 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                {showAdvancedFilters ? 'Hide Filters' : 'Advanced Filters'}
+              </button>
+              <button
+                onClick={exportOrders}
+                disabled={filteredOrders.length === 0}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
             </div>
+
+            {/* Advanced Filters */}
+            {showAdvancedFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-gray-200">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Payment Status</label>
+                  <select
+                    value={paymentFilter}
+                    onChange={(e) => setPaymentFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-navy-900 focus:outline-none"
+                  >
+                    <option value="all">All Payment</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Date Range</label>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-navy-900 focus:outline-none"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="month">Last 30 Days</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Sort By</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-navy-900 focus:outline-none"
+                  >
+                    <option value="created_at">Date Created</option>
+                    <option value="total_price">Total Amount</option>
+                    <option value="customer_name">Customer Name</option>
+                    <option value="order_status">Status</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Sort Order</label>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:border-navy-900 focus:outline-none"
+                  >
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

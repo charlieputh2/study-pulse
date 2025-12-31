@@ -1,29 +1,26 @@
 import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import UniqueMenuItemCard from './UniqueMenuItemCard';
-import UniqueHero from './UniqueHero';
 import ProductDetailModal from './ProductDetailModal';
-import Testimonials from './Testimonials';
-import EnhancedStayUpdated from './EnhancedStayUpdated';
-import EnhancedWhyChooseStudyPulse from './EnhancedWhyChooseStudyPulse';
-import EnhancedFAQ from './EnhancedFAQ';
-import UniqueLocationSection from './UniqueLocationSection';
 import Pagination from './Pagination';
 import type { Product, ProductVariation, CartItem } from '../types';
-import { Search, Package, Grid, List, X, Filter } from 'lucide-react';
+import { Search, Package, Grid, List, X, Filter, ArrowRight } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import '../styles/animations.css';
 
-interface MenuProps {
+interface ProductsProps {
   menuItems: Product[];
   addToCart: (product: Product, variation?: ProductVariation, quantity?: number) => void;
   cartItems: CartItem[];
   updateQuantity: (index: number, quantity: number) => void;
 }
 
-const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
+const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState<'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'rating' | 'featured'>('name-asc');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  // Initialize with all filters closed
   const [showFilters, setShowFilters] = useState(false);
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -76,6 +73,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
     });
 
   const clearAllFilters = () => {
+    console.log('Clearing all filters');
     setSearchTerm('');
     setSelectedCategory('All');
     setSortOrder('name-asc');
@@ -83,8 +81,19 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
     setInStockOnly(false);
     setWithDiscountOnly(false);
     setLocalPriceRange([0, maxPrice]);
+    setShowFilters(false);
     setCurrentPage(1); // Reset to first page when clearing filters
   };
+
+  const activeFiltersCount = [
+    searchTerm,
+    selectedCategory !== 'All',
+    sortOrder !== 'name-asc',
+    showFeaturedOnly,
+    inStockOnly,
+    withDiscountOnly,
+    localPriceRange[0] > 0 || localPriceRange[1] < maxPrice
+  ].filter(Boolean).length;
 
   // Reset page when filters change
   React.useEffect(() => {
@@ -97,21 +106,12 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
   const endIndex = startIndex + itemsPerPage;
   const currentItems = filteredAndSortedItems.slice(startIndex, endIndex);
 
-  const activeFiltersCount = [
-    searchTerm,
-    selectedCategory !== 'All',
-    sortOrder !== 'name-asc',
-    showFeaturedOnly,
-    inStockOnly,
-    withDiscountOnly,
-    localPriceRange[0] > 0 || localPriceRange[1] < maxPrice
-  ].filter(Boolean).length;
-
   const handleAddToCart = (product: Product, variation?: ProductVariation, quantity: number = 1) => {
     addToCart(product, variation, quantity);
   };
 
   const handleProductClick = (product: Product) => {
+    console.log('Product clicked:', product.name);
     setSelectedProduct(product);
   };
 
@@ -130,22 +130,59 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
       )}
 
       <div className="min-h-screen bg-gray-50">
-        <UniqueHero
-          onShopAll={() => {
-            productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
-        />
+        {/* Hero Section for Products Page */}
+        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white relative overflow-hidden">
+          {/* Background Pattern - Matching Footer */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+          </div>
+          
+          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div className="text-center max-w-4xl mx-auto">
+              <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-white">
+                Our Premium Products
+              </h1>
+              <p className="text-xl lg:text-2xl text-blue-200 mb-12 max-w-3xl mx-auto leading-relaxed">
+                Discover our scientifically formulated peptide solutions designed for research excellence
+              </p>
+              
+              {/* Action Buttons - Better Aligned */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <Link 
+                  to="/"
+                  className="px-8 py-4 bg-white text-blue-900 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 group"
+                >
+                  <span className="flex items-center gap-2">
+                    Back to Home
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </Link>
+                
+                <div className="px-8 py-4 bg-blue-500/20 backdrop-blur-xl border-2 border-blue-400/30 rounded-xl font-medium">
+                  <div className="flex items-center gap-3">
+                    <Package className="w-6 h-6 text-blue-400" />
+                    <div className="text-left">
+                      <div className="text-2xl font-bold text-white">{menuItems.length}</div>
+                      <div className="text-sm text-blue-300">Products Available</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12" ref={productsRef} id="products-section">
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-6">
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Premium Research Products
-                </h1>
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                  Browse All Products
+                </h2>
                 <p className="text-gray-600 text-lg">
-                  Discover our scientifically formulated peptide solutions
+                  Find the perfect research solution for your needs
                 </p>
                 <div className="flex items-center gap-4 mt-2">
                   <span className="text-sm text-gray-500">
@@ -228,7 +265,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
               {/* Advanced Filters Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`filter-button px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   showFilters || activeFiltersCount > 0
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300'
@@ -237,7 +274,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
                 <Filter className="w-4 h-4" />
                 Advanced Filters
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                  <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs font-bold animate-pulse">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -257,15 +294,31 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
 
             {/* Advanced Filters Panel */}
             {showFilters && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-6 animate-fade-in">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 mb-6 transform transition-all duration-500 ease-out animate-slideDown">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Filter className="w-5 h-5 text-blue-500" />
+                    Advanced Filters
+                  </h3>
+                  <button
+                    onClick={() => setShowFilters(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Category Filter */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                  <div className="transform transition-all duration-300 hover:scale-105">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      Category
+                    </label>
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all duration-200 hover:border-gray-400"
                     >
                       {categories.map(category => (
                         <option key={category} value={category}>
@@ -276,12 +329,15 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
                   </div>
 
                   {/* Sort By */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
+                  <div className="transform transition-all duration-300 hover:scale-105">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                      Sort By
+                    </label>
                     <select
                       value={sortOrder}
                       onChange={(e) => setSortOrder(e.target.value as any)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all duration-200 hover:border-gray-400"
                     >
                       <option value="name-asc">Name: A-Z</option>
                       <option value="name-desc">Name: Z-A</option>
@@ -292,9 +348,10 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
                   </div>
 
                   {/* Price Range */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Price Range: ₱{localPriceRange[0]} - ₱{localPriceRange[1]}
+                  <div className="transform transition-all duration-300 hover:scale-105">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      Price Range: ₱{localPriceRange[0].toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} - ₱{localPriceRange[1].toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </label>
                     <div className="space-y-2">
                       <input
@@ -303,46 +360,52 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
                         max={maxPrice}
                         value={localPriceRange[1]}
                         onChange={(e) => setLocalPriceRange([localPriceRange[0], parseInt(e.target.value)])}
-                        className="w-full"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider transition-all duration-200 hover:bg-gray-300"
                       />
-                      <div className="flex justify-between text-xs text-gray-500">
+                      <div className="flex justify-between text-xs text-gray-500 font-medium">
                         <span>₱0</span>
-                        <span>₱{maxPrice}</span>
+                        <span>₱{maxPrice.toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Quick Filters */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Quick Filters</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={showFeaturedOnly}
-                          onChange={(e) => setShowFeaturedOnly(e.target.checked)}
-                          className="mr-2 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm">Featured Only</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={inStockOnly}
-                          onChange={(e) => setInStockOnly(e.target.checked)}
-                          className="mr-2 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm">In Stock Only</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={withDiscountOnly}
-                          onChange={(e) => setWithDiscountOnly(e.target.checked)}
-                          className="mr-2 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-sm">With Discount</span>
-                      </label>
+                  <div className="transform transition-all duration-300 hover:scale-105">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                      Quick Filters
+                    </label>
+                    <div className="space-y-3">
+                      {[
+                        { id: 'featured', label: 'Featured Only', checked: showFeaturedOnly, onChange: setShowFeaturedOnly, color: 'yellow' },
+                        { id: 'stock', label: 'In Stock Only', checked: inStockOnly, onChange: setInStockOnly, color: 'green' },
+                        { id: 'discount', label: 'With Discount', checked: withDiscountOnly, onChange: setWithDiscountOnly, color: 'red' }
+                      ].map((filter) => (
+                        <label key={filter.id} className="flex items-center group cursor-pointer">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={filter.checked}
+                              onChange={(e) => filter.onChange(e.target.checked)}
+                              className="sr-only"
+                            />
+                            <div className={`w-5 h-5 border-2 rounded-md transition-all duration-200 ${
+                              filter.checked 
+                                ? `bg-${filter.color}-500 border-${filter.color}-500` 
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}>
+                              {filter.checked && (
+                                <svg className="w-3 h-3 text-white mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                          <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                            {filter.label}
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -410,14 +473,43 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
                 {currentItems.map((product, index) => (
                   <div
                     key={product.id}
-                    className="animate-fade-in"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className="product-card animate-fadeIn relative"
+                    style={{ 
+                      animationDelay: `${index * 100}ms`,
+                      animationFillMode: 'both'
+                    }}
                   >
                     <UniqueMenuItemCard
                       product={product}
                       addToCart={handleAddToCart}
                       onQuickView={handleProductClick}
                     />
+                    
+                    {/* Badges Container - Properly Positioned */}
+                    <div className="absolute top-3 left-3 z-30 flex flex-col gap-2">
+                      {/* Featured Badge */}
+                      {product.featured && (
+                        <span className="featured-badge">Featured</span>
+                      )}
+                    </div>
+                    
+                    {/* Right Side Badges */}
+                    <div className="absolute top-3 right-3 z-30 flex flex-col gap-2 items-end">
+                      {/* Discount Badge - Only show if valid discount > 0% */}
+                      {product.discount_active && 
+                       product.discount_price && 
+                       product.base_price && 
+                       product.discount_price < product.base_price && (
+                        <span className="discount-badge">
+                          {Math.round(((product.base_price - product.discount_price) / product.base_price) * 100)}% OFF
+                        </span>
+                      )}
+                      
+                      {/* Urgency Badge - Only show if low stock */}
+                      {product.stock_quantity < 5 && product.stock_quantity > 0 && (
+                        <span className="urgent-badge">Only {product.stock_quantity} Left</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -435,15 +527,9 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
             </>
           )}
         </div>
-
-        <Testimonials />
-        <EnhancedStayUpdated />
-        <EnhancedWhyChooseStudyPulse />
-        <EnhancedFAQ />
-        <UniqueLocationSection />
       </div>
     </>
   );
 };
 
-export default Menu;
+export default Products;
