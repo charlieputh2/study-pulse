@@ -218,10 +218,9 @@ const RegisterPage: React.FC = () => {
         // Show success notification
         await Swal.fire({
           icon: 'success',
-          title: '🎉 Account Created Successfully!',
+          title: 'Account Created Successfully',
           html: `
             <div style="text-align: center; animation: fadeIn 0.5s;">
-              <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounce 1s infinite;">🌟</div>
               <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
                 Welcome to Study Pulse, <strong style="color: #10b981;">${fullName}</strong>!
               </p>

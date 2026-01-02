@@ -101,8 +101,9 @@ router.post('/register', multerErrorHandler, async (req, res) => {
       });
     }
 
-    // Check terms acceptance
-    if (!acceptTerms || acceptTerms !== 'true') {
+    // Check terms acceptance (handle both boolean and string 'true')
+    const termsAccepted = acceptTerms === true || acceptTerms === 'true';
+    if (!termsAccepted) {
       return res.status(400).json({ 
         success: false, 
         message: 'You must accept the terms and conditions' 
@@ -121,36 +122,46 @@ router.post('/register', multerErrorHandler, async (req, res) => {
     const result = await userService.registerUser(userData);
 
     if (result.success) {
-      console.log('Registration successful, sending optional services...');
+      console.log('Registration successful:', userData.email);
       
-      // Try to create user profile in Supabase (non-blocking)
-      if (userProfileService) {
+      // Send optional services asynchronously (don't wait for them)
+      // This prevents registration from failing if these services fail
+      setImmediate(async () => {
         try {
-          console.log('Creating user profile in Supabase for:', userData.email);
-          const profileResult = await userProfileService.createUserProfile(userData);
-          
-          if (profileResult && profileResult.success) {
-            console.log('User profile created in Supabase successfully');
-          } else {
-            console.warn('Failed to create user profile in Supabase:', profileResult?.error);
+          // Try to create user profile in Supabase (non-blocking)
+          if (userProfileService) {
+            try {
+              console.log('Creating user profile in Supabase for:', userData.email);
+              const profileResult = await userProfileService.createUserProfile(userData);
+              
+              if (profileResult && profileResult.success) {
+                console.log('User profile created in Supabase successfully');
+              } else {
+                console.warn('Failed to create user profile in Supabase:', profileResult?.error);
+              }
+            } catch (profileError) {
+              console.warn('Supabase profile creation error (non-blocking):', profileError?.message);
+            }
           }
-        } catch (profileError) {
-          console.warn('Supabase profile creation error (non-blocking):', profileError?.message);
-          // Don't fail registration if Supabase fails
+          
+          // Try to send welcome email (non-blocking)
+          if (emailService && emailService.sendWelcomeEmail) {
+            try {
+              console.log('Sending welcome email to:', userData.email);
+              const emailResult = await emailService.sendWelcomeEmail(userData.email, userData.fullName);
+              if (emailResult?.success) {
+                console.log('Welcome email sent successfully');
+              } else {
+                console.warn('Welcome email failed:', emailResult?.error);
+              }
+            } catch (emailError) {
+              console.warn('Welcome email error:', emailError?.message);
+            }
+          }
+        } catch (err) {
+          console.warn('Error in optional services:', err?.message);
         }
-      }
-      
-      // Try to send welcome email (non-blocking)
-      if (emailService && emailService.sendWelcomeEmail) {
-        try {
-          console.log('Sending welcome email to:', userData.email);
-          const emailResult = await emailService.sendWelcomeEmail(userData.email, userData.fullName);
-          console.log('Email result:', emailResult);
-        } catch (emailError) {
-          console.warn('Welcome email error (non-blocking):', emailError?.message);
-          // Don't fail registration if email fails
-        }
-      }
+      });
       
       console.log('Sending success response');
       return res.status(201).json({

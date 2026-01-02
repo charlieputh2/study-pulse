@@ -109,9 +109,11 @@ const Footer: React.FC = () => {
 
         {/* Footer Bottom */}
         <div className="border-t border-gray-100 pt-6 text-center">
-          <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
-            <Heart className="w-3 h-3 text-theme-secondary fill-theme-secondary" />
+          <p className="text-xs text-gray-500">
             © {currentYear} Study Pulse Philippines. All rights reserved.
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Quality assured • Secure transactions • Fast delivery
           </p>
         </div>
       </div>

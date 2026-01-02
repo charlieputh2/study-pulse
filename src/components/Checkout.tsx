@@ -582,22 +582,19 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         });
 
         const orderDetails = `
-✨Study Pulse - NEW ORDER
+Study Pulse Order - ${dateTimeStamp}
 
-📅 ORDER DATE & TIME
-${dateTimeStamp}
-
-👤 CUSTOMER INFORMATION
+CUSTOMER INFORMATION
 Name: ${fullName}
 Email: ${email}
 Phone: ${phone}
 
-📦 SHIPPING ADDRESS
+SHIPPING ADDRESS
 ${address}
 ${barangay}
 ${city}, ${state} ${zipCode}
 
-🛒 ORDER DETAILS
+ORDER DETAILS
 ${cartItems.map(item => {
           let line = `• ${item.product.name}`;
           if (item.variation) {
@@ -616,24 +613,24 @@ ${cartItems.map(item => {
           return line;
         }).join('\n\n')}
 
-💰 PRICING
+PRICING
 Product Total: ₱${totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
 Shipping Fee: ₱${shippingFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })} (${shippingLocation.replace('_', ' & ')})
 ${selectedCourier ? `Courier: ${selectedCourier} (${isCOD ? 'COD' : 'Payment First'})\n` : ''}
 ${courierFee > 0 ? `COD Fee: ₱${courierFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}\n` : ''}
 ${discountAmount > 0 ? `Discount (${appliedPromo?.code}): -₱${discountAmount.toLocaleString('en-PH', { minimumFractionDigits: 0 })}\n` : ''}Grand Total: ₱${finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
 
-💳 PAYMENT METHOD
+PAYMENT METHOD
 ${paymentMethod?.name || 'N/A'}
 ${paymentMethod ? `Account: ${paymentMethod.account_number}` : ''}
 
-📸 PROOF OF PAYMENT
+PROOF OF PAYMENT
 ${paymentProofUrl ? 'Screenshot attached to order.' : 'Pending'}
 
-📱 CONTACT METHOD
+CONTACT METHOD
 Messenger: https://m.me/StudyPulse
 
-📋 ORDER ID: ${orderData.id}
+ORDER ID: ${orderData.id}
 
 Please confirm this order. Thank you!
       `.trim();

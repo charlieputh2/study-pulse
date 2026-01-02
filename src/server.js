@@ -71,11 +71,11 @@ app.use((req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📱 API available at http://localhost:${PORT}/api`);
-  console.log(`📸 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`API available at http://localhost:${PORT}/api`);
+  console.log(`Health check: http://localhost:${PORT}/api/health`);
 });
 
 export default app;

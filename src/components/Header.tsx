@@ -89,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMenuClic
                 {/* Show on 2xl+ screens */}
                 <a
                   href="/tracking"
-                  className="hidden 2xl:flex text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
+                  className="hidden 2xl:flex items-center gap-1 text-sm font-semibold text-gray-700 hover:text-[#1d4ed8] transition-all duration-200 px-2 py-1 rounded-lg hover:bg-blue-50 whitespace-nowrap"
                 >
                   <Truck className="w-4 h-4 flex-shrink-0" />
                   <span>Tracking</span>

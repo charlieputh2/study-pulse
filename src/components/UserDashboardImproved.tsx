@@ -16,6 +16,11 @@ import {
   Mail,
   Home,
   Grid3x3,
+  Star,
+  Lock,
+  Shield,
+  Bell,
+  AlertCircle,
 } from 'lucide-react';
 
 interface UserData {
@@ -149,7 +154,7 @@ const UserDashboardImproved: React.FC = () => {
             </div>
           )}
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold">Welcome back, {user.fullName.split(' ')[0]}! 👋</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold">Welcome back, {user.fullName.split(' ')[0]}</h2>
             <p className="text-blue-100 text-sm sm:text-base">Member since {new Date(user.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
@@ -158,9 +163,9 @@ const UserDashboardImproved: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
-          { icon: '🛍️', label: 'Total Orders', value: '0', color: 'blue' },
-          { icon: '❤️', label: 'Wishlist Items', value: '0', color: 'red' },
-          { icon: '⭐', label: 'Loyalty Points', value: '0', color: 'yellow' },
+          { icon: <ShoppingBag className="w-6 h-6" />, label: 'Total Orders', value: '0', color: 'blue' },
+          { icon: <Heart className="w-6 h-6" />, label: 'Wishlist Items', value: '0', color: 'red' },
+          { icon: <Star className="w-6 h-6" />, label: 'Loyalty Points', value: '0', color: 'yellow' },
         ].map((stat, idx) => (
           <div key={idx} className={`bg-white rounded-xl p-4 sm:p-6 shadow-md border-l-4 border-${stat.color}-500`}>
             <div className="flex items-center justify-between">
@@ -168,7 +173,7 @@ const UserDashboardImproved: React.FC = () => {
                 <p className="text-gray-600 text-sm">{stat.label}</p>
                 <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stat.value}</p>
               </div>
-              <div className="text-4xl">{stat.icon}</div>
+              <div className="text-4xl text-${stat.color}-500">{stat.icon}</div>
             </div>
           </div>
         ))}
@@ -297,17 +302,17 @@ const UserDashboardImproved: React.FC = () => {
 
         <div className="space-y-4">
           {[
-            { label: 'Change Password', icon: '🔐' },
-            { label: 'Privacy Settings', icon: '🔒' },
-            { label: 'Notification Preferences', icon: '🔔' },
-            { label: 'Delete Account', icon: '⚠️' },
+            { label: 'Change Password', icon: <Lock className="w-5 h-5" /> },
+            { label: 'Privacy Settings', icon: <Shield className="w-5 h-5" /> },
+            { label: 'Notification Preferences', icon: <Bell className="w-5 h-5" /> },
+            { label: 'Delete Account', icon: <AlertCircle className="w-5 h-5 text-red-500" /> },
           ].map((setting, idx) => (
             <button
               key={idx}
               className="w-full text-left flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg">{setting.icon}</span>
+                <span className="text-gray-600 group-hover:text-blue-600">{setting.icon}</span>
                 <span className="font-medium text-gray-900 group-hover:text-blue-600">{setting.label}</span>
               </div>
               <ChevronRight className="text-gray-400 group-hover:text-blue-600" />

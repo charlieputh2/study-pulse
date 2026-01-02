@@ -43,6 +43,50 @@
       "updatedAt": "2025-12-31T20:06:01.071Z",
       "isActive": true,
       "role": "user"
+    },
+    {
+      "id": "1767363358778",
+      "email": "test@example.com",
+      "fullName": "Test User",
+      "password": "TestPassword123",
+      "photo": null,
+      "createdAt": "2026-01-02T14:15:58.778Z",
+      "updatedAt": "2026-01-02T14:15:58.778Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1767363375532",
+      "email": "newuser20260102221615@example.com",
+      "fullName": "New User 20260102221615",
+      "password": "TestPassword123",
+      "photo": null,
+      "createdAt": "2026-01-02T14:16:15.532Z",
+      "updatedAt": "2026-01-02T14:16:15.532Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1767363380241",
+      "email": "test20260102221620@test.com",
+      "fullName": "New User",
+      "password": "Test1234",
+      "photo": null,
+      "createdAt": "2026-01-02T14:16:20.241Z",
+      "updatedAt": "2026-01-02T14:16:20.241Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1767363448985",
+      "email": "charlieeeee@gmail.com",
+      "fullName": "Charlieeeeeee",
+      "password": "Bboy12345",
+      "photo": null,
+      "createdAt": "2026-01-02T14:17:28.985Z",
+      "updatedAt": "2026-01-02T14:17:28.985Z",
+      "isActive": true,
+      "role": "user"
     }
   ]
 }

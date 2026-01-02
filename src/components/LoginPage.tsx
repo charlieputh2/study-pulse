@@ -103,10 +103,9 @@ const LoginPage: React.FC = () => {
         // Show success notification with animation
         await Swal.fire({
           icon: 'success',
-          title: '🎉 Login Successful!',
+          title: 'Login Successful',
           html: `
             <div style="text-align: center; animation: fadeIn 0.5s;">
-              <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounce 1s infinite;">🎊</div>
               <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
                 Welcome back, <strong style="color: #3b82f6;">${data.user.fullName}</strong>!
               </p>
@@ -135,7 +134,7 @@ const LoginPage: React.FC = () => {
         setError(data.message || 'Login failed');
         await Swal.fire({
           icon: 'error',
-          title: '❌ Login Failed',
+          title: 'Login Failed',
           text: data.message || 'Unable to authenticate. Please check your credentials and try again.',
           confirmButtonColor: '#ef4444',
           backdrop: 'rgba(0,0,0,0.5)',
