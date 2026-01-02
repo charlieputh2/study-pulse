@@ -325,7 +325,7 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Category Filter */}
                   <div className="transform transition-all duration-300 hover:scale-105">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="flex text-sm font-semibold text-gray-700 mb-2 items-center gap-2">
                       <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                       Category
                     </label>
@@ -344,7 +344,7 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
 
                   {/* Sort By */}
                   <div className="transform transition-all duration-300 hover:scale-105">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="flex text-sm font-semibold text-gray-700 mb-2 items-center gap-2">
                       <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
                       Sort By
                     </label>
@@ -363,7 +363,7 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
 
                   {/* Price Range */}
                   <div className="transform transition-all duration-300 hover:scale-105">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="flex text-sm font-semibold text-gray-700 mb-2 items-center gap-2">
                       <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                       Price Range: ₱{localPriceRange[0].toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} - ₱{localPriceRange[1].toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </label>
@@ -385,7 +385,7 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
 
                   {/* Quick Filters */}
                   <div className="transform transition-all duration-300 hover:scale-105">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="flex text-sm font-semibold text-gray-700 mb-2 items-center gap-2">
                       <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
                       Quick Filters
                     </label>

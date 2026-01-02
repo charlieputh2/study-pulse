@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Package, Beaker, ShoppingCart, Plus, Minus, Sparkles } from 'lucide-react';
+import { X, Package, Beaker, ShoppingCart, Plus, Minus, Sparkles, Heart } from 'lucide-react';
 import type { Product, ProductVariation, ProductOption } from '../types';
 
 interface ProductDetailModalProps {
@@ -30,6 +30,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     getFirstAvailableOption()
   );
   const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  // Check if product is in wishlist on mount
+  React.useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('studyPulseWishlist') || '[]');
+    const isInWishlist = wishlist.some((item: any) => item.product_id === product.id);
+    setIsWishlisted(isInWishlist);
+  }, [product.id]);
 
   const hasDiscount = product.discount_active && product.discount_price;
   const currentPrice = selectedOption 
@@ -50,17 +58,50 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     onClose();
   };
 
+  const handleWishlistToggle = () => {
+    const wishlist = JSON.parse(localStorage.getItem('studyPulseWishlist') || '[]');
+    const exists = wishlist.findIndex((item: any) => item.product_id === product.id);
+
+    if (exists >= 0) {
+      // Remove from wishlist
+      wishlist.splice(exists, 1);
+      setIsWishlisted(false);
+    } else {
+      // Add to wishlist
+      wishlist.push({
+        id: `${Date.now()}-${product.id}`,
+        product_id: product.id,
+        product_name: product.name,
+        price: currentPrice,
+        image: product.image_url,
+        addedAt: new Date().toISOString()
+      });
+      setIsWishlisted(true);
+    }
+
+    localStorage.setItem('studyPulseWishlist', JSON.stringify(wishlist));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden my-2 sm:my-8">
         {/* Header */}
         <div className="bg-navy-900 text-white p-3 sm:p-4 md:p-6 relative border-b-2 border-navy-900/30">
-          <button
-            onClick={onClose}
-            className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors text-white hover:text-gold-400"
-          >
-            <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-          </button>
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 flex gap-2">
+            <button
+              onClick={handleWishlistToggle}
+              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors text-white hover:text-red-400"
+              title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            >
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg transition-colors text-white hover:text-gold-400"
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+            </button>
+          </div>
           <div className="pr-10 sm:pr-12">
             <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1.5 sm:mb-2 bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">{product.name}</h2>
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap">

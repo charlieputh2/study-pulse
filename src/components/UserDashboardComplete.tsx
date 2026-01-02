@@ -5,6 +5,7 @@ import {
   LogOut,
   Menu,
   X,
+  Home,
   User,
   ShoppingBag,
   Package,
@@ -14,7 +15,6 @@ import {
   ChevronRight,
   Clock,
   Mail,
-  Home,
   Grid3x3,
   Lock,
   Shield,
@@ -27,6 +27,7 @@ import {
   Trash2,
   TrendingUp,
   Calendar,
+  Award,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -92,7 +93,7 @@ const UserDashboardComplete: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserData | null>(null);
   const [activeSection, setActiveSection] = useState('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Orders state
@@ -123,17 +124,19 @@ const UserDashboardComplete: React.FC = () => {
 
   useEffect(() => {
     loadUserData();
+    // Fetch wishlist on component mount so overview shows correct count
+    const savedWishlist = localStorage.getItem('studyPulseWishlist') || '[]';
+    setWishlist(JSON.parse(savedWishlist));
   }, [navigate]);
 
   useEffect(() => {
     if (activeSection === 'orders' && orders.length === 0) {
       fetchOrders();
     }
-  }, [activeSection]);
-
-  useEffect(() => {
-    if (activeSection === 'wishlist' && wishlist.length === 0) {
-      fetchWishlist();
+    // Always refresh wishlist when viewing overview or wishlist section
+    if (activeSection === 'overview' || activeSection === 'wishlist') {
+      const savedWishlist = localStorage.getItem('studyPulseWishlist') || '[]';
+      setWishlist(JSON.parse(savedWishlist));
     }
   }, [activeSection]);
 
@@ -186,7 +189,8 @@ const UserDashboardComplete: React.FC = () => {
     }
   };
 
-  const fetchWishlist = async () => {
+  // Load wishlist from localStorage on component mount
+  useEffect(() => {
     setWishlistLoading(true);
     try {
       const savedWishlist = localStorage.getItem('studyPulseWishlist') || '[]';
@@ -198,7 +202,7 @@ const UserDashboardComplete: React.FC = () => {
     } finally {
       setWishlistLoading(false);
     }
-  };
+  }, []);
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -364,11 +368,12 @@ const UserDashboardComplete: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { icon: <ShoppingBag className="w-6 h-6" />, label: 'Total Orders', value: orders.length.toString(), color: 'blue' },
           { icon: <Heart className="w-6 h-6" />, label: 'Wishlist Items', value: wishlist.length.toString(), color: 'red' },
           { icon: <TrendingUp className="w-6 h-6" />, label: 'Total Spent', value: `₱${orders.reduce((sum, o) => sum + o.total_price, 0).toFixed(2)}`, color: 'green' },
+          { icon: <Award className="w-6 h-6" />, label: 'Loyalty Points', value: (Math.floor(orders.reduce((sum, o) => sum + o.total_price, 0) * 10)).toString(), color: 'purple' },
         ].map((stat, idx) => (
           <div key={idx} className={`bg-white rounded-xl p-4 sm:p-6 shadow-md border-l-4 border-${stat.color}-500`}>
             <div className="flex items-center justify-between">

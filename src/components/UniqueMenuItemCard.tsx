@@ -15,9 +15,46 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Check if product is in wishlist on mount
+  React.useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('studyPulseWishlist') || '[]');
+    const isInWishlist = wishlist.some((item: any) => item.product_id === product.id);
+    setIsWishlisted(isInWishlist);
+  }, [product.id]);
+
   const handleAddToCart = () => {
     addToCart(product, selectedVariation, selectedOption, quantity);
     setQuantity(1); // Reset quantity after adding to cart
+  };
+
+  const handleWishlistToggle = () => {
+    const wishlist = JSON.parse(localStorage.getItem('studyPulseWishlist') || '[]');
+    const exists = wishlist.findIndex((item: any) => item.product_id === product.id);
+
+    if (exists >= 0) {
+      // Remove from wishlist
+      wishlist.splice(exists, 1);
+      setIsWishlisted(false);
+    } else {
+      // Add to wishlist
+      const displayPrice = selectedOption 
+        ? (selectedOption.final_price || (selectedVariation ? selectedVariation.price : product.base_price) + selectedOption.price_adjustment)
+        : selectedVariation 
+          ? selectedVariation.price 
+          : product.base_price;
+      
+      wishlist.push({
+        id: `${Date.now()}-${product.id}`,
+        product_id: product.id,
+        product_name: product.name,
+        price: displayPrice,
+        image: product.image_url,
+        addedAt: new Date().toISOString()
+      });
+      setIsWishlisted(true);
+    }
+
+    localStorage.setItem('studyPulseWishlist', JSON.stringify(wishlist));
   };
 
   const displayPrice = selectedOption 
@@ -65,7 +102,7 @@ const UniqueMenuItemCard: React.FC<MenuItemCardProps> = ({ product, addToCart, o
         {/* Quick Actions */}
         <div className={`absolute top-2 sm:top-3 right-2 sm:right-3 flex flex-col space-y-2 z-20 transition-all duration-300 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <button
-            onClick={() => setIsWishlisted(!isWishlisted)}
+            onClick={handleWishlistToggle}
             className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all duration-300 hover:scale-110 group"
           >
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600 group-hover:text-red-500'}`} />

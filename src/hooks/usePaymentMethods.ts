@@ -7,6 +7,7 @@ export interface PaymentMethod {
   account_number: string;
   account_name: string;
   qr_code_url: string;
+  instructions?: string;
   active: boolean;
   sort_order: number;
   created_at: string;
