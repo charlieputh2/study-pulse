@@ -36,10 +36,29 @@ const readDatabase = () => {
 // Write to database
 const writeDatabase = (data) => {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+    const dbDir = path.dirname(DB_PATH);
+    // Ensure directory exists
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    
+    // Write to temporary file first
+    const tempPath = DB_PATH + '.tmp';
+    fs.writeFileSync(tempPath, JSON.stringify(data, null, 2));
+    
+    // Replace original file with temp file (atomic operation)
+    fs.renameSync(tempPath, DB_PATH);
     return true;
   } catch (error) {
     console.error('Error writing to database:', error);
+    // Clean up temp file if it exists
+    try {
+      if (fs.existsSync(DB_PATH + '.tmp')) {
+        fs.unlinkSync(DB_PATH + '.tmp');
+      }
+    } catch (e) {
+      // Ignore cleanup errors
+    }
     return false;
   }
 };
@@ -48,11 +67,16 @@ const writeDatabase = (data) => {
 const userService = {
   // Register new user
   async registerUser(userData) {
+    console.log('=== userService.registerUser called ===');
+    console.log('userData email:', userData.email);
+    
     const db = readDatabase();
+    console.log('Current users in DB:', db.users.length);
     
     // Check if email already exists
     const existingUser = db.users.find(user => user.email === userData.email);
     if (existingUser) {
+      console.log('Email already exists:', userData.email);
       return { 
         success: false, 
         message: 'Email already registered' 
@@ -72,21 +96,27 @@ const userService = {
       role: 'user'
     };
 
+    console.log('New user object created:', { id: newUser.id, email: newUser.email });
+
     // Add to database
     db.users.push(newUser);
+    console.log('User added to DB array, total users now:', db.users.length);
     
     // Save to database
     const saved = writeDatabase(db);
+    console.log('Database saved:', saved);
     
     if (saved) {
       // Remove password from response for security
       const { password, ...userResponse } = newUser;
+      console.log('Registration successful for:', userData.email);
       return { 
         success: true, 
         message: 'User registered successfully',
         user: userResponse
       };
     } else {
+      console.error('Failed to save to database');
       return { 
         success: false, 
         message: 'Failed to save user data' 

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UniqueMenuItemCard from './UniqueMenuItemCard';
 import ProductDetailModal from './ProductDetailModal';
@@ -33,12 +33,21 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
 
   const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category)))];
   
-  const maxPrice = Math.max(...menuItems.map(item => item.base_price || 0));
+  // Calculate max price safely - ensure it's a valid number
+  const maxPrice = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.base_price || 0)) : 1000000;
   const [localPriceRange, setLocalPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const productsRef = useRef<HTMLDivElement | null>(null);
 
   useScrollAnimation();
+
+  // CRITICAL: Prevent Advanced Filters from automatically opening on page load or scroll
+  useEffect(() => {
+    // Force filters to stay closed on initial mount
+    setShowFilters(false);
+    // Reset price range to ensure it matches maxPrice
+    setLocalPriceRange([0, maxPrice]);
+  }, [maxPrice]);
 
   const filteredAndSortedItems = menuItems
     .filter(item => {
@@ -92,7 +101,8 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
     showFeaturedOnly,
     inStockOnly,
     withDiscountOnly,
-    localPriceRange[0] > 0 || localPriceRange[1] < maxPrice
+    // Only count price range as a filter if it's been explicitly changed
+    maxPrice > 0 && (localPriceRange[0] > 0 || localPriceRange[1] < maxPrice)
   ].filter(Boolean).length;
 
   // Reset page when filters change
@@ -264,12 +274,16 @@ const Products: React.FC<ProductsProps> = ({ menuItems, addToCart }) => {
               
               {/* Advanced Filters Toggle */}
               <button
+                id="advanced-filters-toggle"
+                type="button"
                 onClick={() => setShowFilters(!showFilters)}
                 className={`filter-button px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                   showFilters || activeFiltersCount > 0
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300'
                 }`}
+                aria-label="Toggle advanced filters"
+                aria-expanded={showFilters}
               >
                 <Filter className="w-4 h-4" />
                 Advanced Filters

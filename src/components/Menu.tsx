@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import UniqueMenuItemCard from './UniqueMenuItemCard';
 import UniqueHero from './UniqueHero';
 import ProductDetailModal from './ProductDetailModal';
@@ -36,12 +36,21 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
 
   const categories = ['All', ...Array.from(new Set(menuItems.map(item => item.category)))];
   
-  const maxPrice = Math.max(...menuItems.map(item => item.base_price || 0));
+  // Calculate max price safely - ensure it's a valid number
+  const maxPrice = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.base_price || 0)) : 1000000;
   const [localPriceRange, setLocalPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const productsRef = useRef<HTMLDivElement | null>(null);
 
   useScrollAnimation();
+
+  // CRITICAL: Prevent Advanced Filters from automatically opening on page load or scroll
+  useEffect(() => {
+    // Force filters to stay closed on initial mount
+    setShowFilters(false);
+    // Reset price range to ensure it matches maxPrice
+    setLocalPriceRange([0, maxPrice]);
+  }, [maxPrice]);
 
   const filteredAndSortedItems = menuItems
     .filter(item => {
@@ -104,7 +113,8 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart }) => {
     showFeaturedOnly,
     inStockOnly,
     withDiscountOnly,
-    localPriceRange[0] > 0 || localPriceRange[1] < maxPrice
+    // Only count price range as a filter if it's been explicitly changed
+    maxPrice > 0 && (localPriceRange[0] > 0 || localPriceRange[1] < maxPrice)
   ].filter(Boolean).length;
 
   const handleAddToCart = (product: Product, variation?: ProductVariation, option?: ProductOption, quantity: number = 1) => {

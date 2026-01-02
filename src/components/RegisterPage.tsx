@@ -138,16 +138,21 @@ const RegisterPage: React.FC = () => {
       // Create FormData for file upload
       const formData = new FormData();
       formData.append('fullName', fullName.trim());
-      formData.append('email', email.trim());
+      formData.append('email', email.trim().toLowerCase());
       formData.append('password', password);
       formData.append('confirmPassword', confirmPassword);
       formData.append('acceptTerms', acceptTerms.toString());
       
       if (photo) {
-        // Convert base64 to blob for upload
-        const response = await fetch(photo);
-        const blob = await response.blob();
-        formData.append('photo', blob, 'profile.jpg');
+        try {
+          // Convert base64 to blob for upload
+          const response = await fetch(photo);
+          const blob = await response.blob();
+          formData.append('photo', blob, 'profile.jpg');
+        } catch (photoError) {
+          console.warn('Could not process photo, continuing without it:', photoError);
+          // Continue without photo if there's an issue
+        }
       }
 
       // Show loading notification
@@ -169,11 +174,15 @@ const RegisterPage: React.FC = () => {
         backdrop: 'rgba(0,0,0,0.5)',
       });
 
-      // API call to register user
+      // API call to register user with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       const response = await fetch('/api/users/register', {
         method: 'POST',
         body: formData,
-      });
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -252,14 +261,25 @@ const RegisterPage: React.FC = () => {
           }
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
       Swal.close();
-      setError('Registration failed. Please try again.');
+      
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timed out. Please check your connection and try again.';
+      } else if (error instanceof TypeError) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
       await Swal.fire({
         icon: 'error',
-        title: '❌ Network Error',
-        text: 'Unable to connect to server. Please check your internet connection.',
+        title: '❌ Error',
+        text: errorMessage,
         confirmButtonColor: '#ef4444',
         backdrop: 'rgba(0,0,0,0.5)',
       });

@@ -21,6 +21,7 @@ import OrdersPage from './components/OrdersPage';
 import ProductsPage from './components/ProductsPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import UserDashboardImproved from './components/UserDashboardImproved';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -117,6 +118,7 @@ function App() {
         <Route path="/" element={<MainApp />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/dashboard" element={<UserDashboardImproved />} />
         <Route path="/coa" element={<COA />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/calculator" element={<PeptideCalculator />} />

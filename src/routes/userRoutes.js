@@ -44,13 +44,33 @@ const upload = multer({
   }
 });
 
+// Custom multer error handler middleware
+const multerErrorHandler = (req, res, next) => {
+  upload.single('photo')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'File upload error'
+      });
+    }
+    next();
+  });
+};
+
 // Register new user
-router.post('/register', upload.single('photo'), async (req, res) => {
+router.post('/register', multerErrorHandler, async (req, res) => {
   try {
+    console.log('=== REGISTRATION REQUEST ===');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('File info:', req.file ? { filename: req.file.filename, size: req.file.size } : 'No file');
+    
     const { fullName, email, password, confirmPassword, acceptTerms } = req.body;
+    console.log('Extracted data:', { fullName, email, password: '***', confirmPassword: '***', acceptTerms });
 
     // Validate required fields
     if (!fullName || !email || !password) {
+      console.log('Validation failed - missing required fields');
       return res.status(400).json({ 
         success: false, 
         message: 'Full name, email, and password are required' 
@@ -82,7 +102,7 @@ router.post('/register', upload.single('photo'), async (req, res) => {
     }
 
     // Check terms acceptance
-    if (!acceptTerms) {
+    if (!acceptTerms || acceptTerms !== 'true') {
       return res.status(400).json({ 
         success: false, 
         message: 'You must accept the terms and conditions' 
@@ -101,35 +121,57 @@ router.post('/register', upload.single('photo'), async (req, res) => {
     const result = await userService.registerUser(userData);
 
     if (result.success) {
-      // Create user profile in Supabase
-      console.log('Creating user profile in Supabase for:', userData.email);
-      const profileResult = await userProfileService.createUserProfile(userData);
+      console.log('Registration successful, sending optional services...');
       
-      if (profileResult.success) {
-        console.log('User profile created in Supabase successfully');
-      } else {
-        console.error('Failed to create user profile in Supabase:', profileResult.error);
-        // Don't fail registration if Supabase fails, but log the error
+      // Try to create user profile in Supabase (non-blocking)
+      if (userProfileService) {
+        try {
+          console.log('Creating user profile in Supabase for:', userData.email);
+          const profileResult = await userProfileService.createUserProfile(userData);
+          
+          if (profileResult && profileResult.success) {
+            console.log('User profile created in Supabase successfully');
+          } else {
+            console.warn('Failed to create user profile in Supabase:', profileResult?.error);
+          }
+        } catch (profileError) {
+          console.warn('Supabase profile creation error (non-blocking):', profileError?.message);
+          // Don't fail registration if Supabase fails
+        }
       }
       
-      // Send welcome email
-      await emailService.sendWelcomeEmail(userData.email, userData.fullName);
+      // Try to send welcome email (non-blocking)
+      if (emailService && emailService.sendWelcomeEmail) {
+        try {
+          console.log('Sending welcome email to:', userData.email);
+          const emailResult = await emailService.sendWelcomeEmail(userData.email, userData.fullName);
+          console.log('Email result:', emailResult);
+        } catch (emailError) {
+          console.warn('Welcome email error (non-blocking):', emailError?.message);
+          // Don't fail registration if email fails
+        }
+      }
       
-      res.status(201).json({
+      console.log('Sending success response');
+      return res.status(201).json({
         success: true,
-        message: 'Registration successful! Please check your email for confirmation.',
-        user: result.user,
-        profileCreated: profileResult.success
+        message: 'Registration successful!',
+        user: result.user
       });
     } else {
-      res.status(400).json(result);
+      console.log('Registration failed:', result);
+      return res.status(400).json(result);
     }
 
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
+    console.error('Registration endpoint error:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Return detailed error message
+    return res.status(500).json({ 
       success: false, 
-      message: 'Internal server error during registration' 
+      message: error.message || 'Internal server error during registration',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

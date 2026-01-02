@@ -13,12 +13,20 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     onScroll();
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('studyPulseUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
   return (
@@ -201,19 +209,36 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
 
             {/* Right Side Actions - Unique Design */}
             <div className="flex items-center gap-2 lg:gap-4 flex-shrink-0">
-              {/* Login Button - Desktop */}
-              <button
-                onClick={() => {
-                  console.log('Login button clicked');
-                  window.location.href = '/login';
-                }}
-                className="hidden lg:flex items-center gap-2 px-3 h-12 rounded-xl bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 transition-all duration-300 group hover:scale-105 cursor-pointer"
-                title="Login / Register"
-                type="button"
-              >
-                <User className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium">Login</span>
-              </button>
+              {/* User Profile/Login Button - Desktop */}
+              {user ? (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="hidden lg:flex items-center gap-3 px-4 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transition-all duration-300 group hover:scale-105 cursor-pointer shadow-lg"
+                  title="My Dashboard"
+                  type="button"
+                >
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-medium">{user.fullName?.split(' ')[0]}</div>
+                    <div className="text-xs opacity-90">Dashboard</div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    console.log('Login button clicked');
+                    window.location.href = '/login';
+                  }}
+                  className="hidden lg:flex items-center gap-2 px-3 h-12 rounded-xl bg-blue-100 text-blue-600 hover:bg-blue-200 hover:text-blue-700 transition-all duration-300 group hover:scale-105 cursor-pointer"
+                  title="Login / Register"
+                  type="button"
+                >
+                  <User className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium">Login</span>
+                </button>
+              )}
 
               {/* Cart Button - Redesigned */}
               <button
@@ -467,24 +492,42 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
               </div>
             </nav>
 
-            {/* Login Button - Mobile */}
+            {/* Login/User Button - Mobile */}
             <div className="p-4 border-t border-blue-400/20">
-              <button
-                onClick={() => {
-                  console.log('Mobile login button clicked');
-                  navigate('/login');
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white transition-all group"
-              >
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <div className="font-medium text-white">Login / Register</div>
-                  <div className="text-xs text-blue-300">Access your account</div>
-                </div>
-              </button>
+              {user ? (
+                <button
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white transition-all group"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-white">{user.fullName}</div>
+                    <div className="text-xs text-blue-300">My Dashboard</div>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    console.log('Mobile login button clicked');
+                    navigate('/login');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-white transition-all group"
+                >
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-white">Login / Register</div>
+                    <div className="text-xs text-blue-300">Access your account</div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Footer */}

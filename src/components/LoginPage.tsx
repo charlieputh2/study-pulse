@@ -14,20 +14,18 @@ const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
-  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false);
 
   const navigate = useNavigate();
 
-  // Check if user is already logged in - but allow access to login page
+  // Check if user is already logged in - redirect to dashboard
   useEffect(() => {
     const savedUser = localStorage.getItem('studyPulseUser');
     if (savedUser) {
-      // User is already logged in, but don't auto-redirect
-      // Let the user decide if they want to re-login or go to home
-      console.log('User already logged in, but staying on login page');
-      setAlreadyLoggedIn(true);
+      // User is already logged in, redirect to dashboard
+      console.log('User already logged in, redirecting to dashboard');
+      navigate('/dashboard');
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,21 +63,26 @@ const LoginPage: React.FC = () => {
         backdrop: 'rgba(0,0,0,0.5)',
       });
 
-      // API call to login user
+      // API call to login user with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
       const response = await fetch('/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: email.trim(),
+          email: email.trim().toLowerCase(),
           password: password,
           rememberMe: rememberMe
         }),
-      });
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       let data;
@@ -112,7 +115,7 @@ const LoginPage: React.FC = () => {
                 <p style="color: #059669; font-size: 0.9rem;">✓ Session secured</p>
                 <p style="color: #059669; font-size: 0.9rem;">✓ Ready to explore</p>
               </div>
-              <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to homepage...</p>
+              <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to your dashboard...</p>
             </div>
           `,
           timer: 3000,
@@ -127,7 +130,7 @@ const LoginPage: React.FC = () => {
           }
         });
         
-        navigate('/');
+        navigate('/dashboard');
       } else {
         setError(data.message || 'Login failed');
         await Swal.fire({
@@ -141,13 +144,25 @@ const LoginPage: React.FC = () => {
           }
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       Swal.close();
+      
+      let errorMessage = 'Unable to authenticate. Please check your credentials and try again.';
+      
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timed out. Please check your connection and try again.';
+      } else if (error instanceof TypeError) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
       await Swal.fire({
         icon: 'error',
         title: '❌ Login Failed',
-        text: 'Unable to authenticate. Please check your credentials and try again.',
+        text: errorMessage,
         confirmButtonColor: '#ef4444',
         backdrop: 'rgba(0,0,0,0.5)',
         showClass: {
@@ -209,37 +224,6 @@ const LoginPage: React.FC = () => {
 
               {/* Login Card */}
               <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 border border-gray-100 hover:shadow-3xl transition-all duration-300">
-                {/* Already Logged In Alert */}
-                {alreadyLoggedIn && (
-                  <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-                      <div className="flex-1">
-                        <span className="text-yellow-800 text-sm font-medium">You are already logged in</span>
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            onClick={() => navigate('/')}
-                            className="text-xs text-blue-600 hover:text-blue-700 underline"
-                          >
-                            Go to Homepage
-                          </button>
-                          <span className="text-xs text-gray-500">or</span>
-                          <button
-                            onClick={() => {
-                              localStorage.removeItem('studyPulseUser');
-                              setAlreadyLoggedIn(false);
-                              setError('');
-                            }}
-                            className="text-xs text-red-600 hover:text-red-700 underline"
-                          >
-                            Logout and Login Again
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Error Alert */}
                 {error && (
                   <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
