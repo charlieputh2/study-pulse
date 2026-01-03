@@ -182,6 +182,7 @@ const RegisterPage: React.FC = () => {
         method: 'POST',
         body: formData,
         signal: controller.signal
+        // Don't set Content-Type header when sending FormData - browser will set it automatically with boundary
       }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {

@@ -59,7 +59,18 @@ const multerErrorHandler = (req, res, next) => {
 };
 
 // Register new user
-router.post('/register', multerErrorHandler, async (req, res) => {
+router.post('/register', (req, res, next) => {
+  upload.single('photo')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'File upload error'
+      });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     console.log('=== REGISTRATION REQUEST ===');
     console.log('Request body keys:', Object.keys(req.body));
