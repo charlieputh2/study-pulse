@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useSearchParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useSearchParams, Link } from 'react-router-dom';
 import { useCart } from './hooks/useCart';
 import UniqueHeader from './components/UniqueHeader';
 import Menu from './components/Menu';
@@ -21,8 +21,8 @@ import OrdersPage from './components/OrdersPage';
 import ProductsPage from './components/ProductsPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
-import UserDashboardImproved from './components/UserDashboardImproved';
 import UserDashboardComplete from './components/UserDashboardComplete';
+import TirzepatideLanding from './components/TirzepatideLanding';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -31,7 +31,7 @@ function MainApp() {
   const { menuItems } = useMenu();
   const [searchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
-  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>(viewParam === 'cart' ? 'cart' : 'menu');
+  const [currentView, setCurrentView] = React.useState<'menu' | 'cart' | 'checkout'>('menu');
   
   React.useEffect(() => {
     if (viewParam === 'cart') {
@@ -45,20 +45,29 @@ function MainApp() {
   
   const handleViewChange = (view: 'menu' | 'cart' | 'checkout') => {
     setCurrentView(view);
-    // Update URL
+    // Update URL - keep it on /shop route
     const newParams = new URLSearchParams(searchParams);
     if (view === 'menu') {
       newParams.delete('view');
     } else {
       newParams.set('view', view);
     }
-    window.history.pushState({}, '', `/?${newParams.toString()}`);
+    window.history.pushState({}, '', `/shop${newParams.toString() ? '?' + newParams.toString() : ''}`);
     // Scroll to top when changing views
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="min-h-screen bg-white font-inter flex flex-col">
+      {/* Store Indicator */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 text-center text-sm">
+        <div className="container mx-auto flex items-center justify-center gap-2">
+          <Link to="/" className="hover:text-blue-200 transition-colors">← Back to Landing</Link>
+          <span className="text-blue-200">|</span>
+          <span className="font-medium">Study Pulse Store</span>
+        </div>
+      </div>
+      
       <UniqueHeader
         cartItemsCount={cart.getTotalItems()}
         onCartClick={() => handleViewChange('cart')}
@@ -116,7 +125,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MainApp />} />
+        <Route path="/" element={<TirzepatideLanding />} />
+        <Route path="/home" element={<MainApp />} />
+        <Route path="/shop" element={<MainApp />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<UserDashboardComplete />} />
@@ -132,6 +143,7 @@ function App() {
         <Route path="/protocols" element={<Protocols />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/products" element={<ProductsPage />} />
+        <Route path="/tirzepatide" element={<TirzepatideLanding />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>

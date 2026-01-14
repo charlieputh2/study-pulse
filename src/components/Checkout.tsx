@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ShieldCheck, Package, Sparkles, Heart, Copy, Check, MessageCircle, Tag, XCircle, CheckCircle, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Package, Sparkles, Heart, Copy, Check, MessageCircle, Tag, XCircle, CheckCircle, Loader2, Upload, MapPin, Navigation, CreditCard } from 'lucide-react';
 import Swal from 'sweetalert2';
 import type { CartItem } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
@@ -34,6 +34,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   // Courier Selection
   const [selectedCourier, setSelectedCourier] = useState<'LBC' | 'J&T' | 'LALAMOVE' | ''>('');
   const [isCOD, setIsCOD] = useState(false);
+  const [paymentType, setPaymentType] = useState<'prepaid' | 'cod'>('prepaid'); // New payment type state
 
   // User Account
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,7 +44,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Payment
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(''); // Initialize as empty string
   const [contactMethod, setContactMethod] = useState<'messenger' | ''>('messenger');
   const [notes, setNotes] = useState('');
   const [orderMessage, setOrderMessage] = useState<string>('');
@@ -53,6 +54,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   // Payment Proof
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const { uploadImage, uploading: isUploadingProof } = useImageUpload('payment-proofs');
+  
   // Promo Code State
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<any>(null);
@@ -147,15 +149,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, logout',
       cancelButtonText: 'Cancel',
-      backdrop: 'rgba(0,0,0,0.5)',
-      showClass: {
-        popup: 'animate__animated animate__fadeInDown'
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutUp'
-      }
     });
-    
+
     if (result.isConfirmed) {
       localStorage.removeItem('studyPulseUser');
       setIsLoggedIn(false);
@@ -166,20 +161,12 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       setEmail('');
       setPhone('');
       
-      await Swal.fire({
-        icon: 'success',
+      Swal.fire({
         title: 'Logged Out',
-        text: 'You have been logged out successfully.',
+        text: 'You have been successfully logged out.',
+        icon: 'success',
         timer: 2000,
-        timerProgressBar: true,
-        confirmButtonColor: '#1e40af',
-        backdrop: 'rgba(0,0,0,0.5)',
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown'
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp'
-        }
+        showConfirmButton: false,
       });
     }
   };
@@ -277,6 +264,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     (state?.trim() ?? '') !== '' &&
     (zipCode?.trim() ?? '') !== '' &&
     shippingLocation !== '' &&
+    (paymentType === 'prepaid' || paymentType === 'cod') &&
     selectedCourier !== '';
 
   const handleProceedToPayment = async () => {
@@ -284,7 +272,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
       await Swal.fire({
         icon: 'warning',
         title: 'Incomplete Information',
-        text: 'Please fill all required fields including courier selection.',
+        text: 'Please fill all required fields including payment type and courier selection.',
         confirmButtonColor: '#1e40af',
         confirmButtonText: 'OK',
         backdrop: 'rgba(0,0,0,0.5)',
@@ -834,7 +822,7 @@ Please confirm this order. Thank you!
             <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent mb-4 flex items-center gap-3">
               Complete Payment
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 rounded-xl shadow-lg">
-                <ShieldCheck className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+                <ShieldCheck className="w-6 h-6 text-white" />
               </div>
             </h1>
             <p className="text-gray-600 text-lg">Securely complete your purchase</p>
@@ -1070,7 +1058,6 @@ Please confirm this order. Thank you!
                   {cartItems.map((item, index) => (
                     <div key={index} className="flex items-center gap-3 pb-3 border-b border-gray-100 last:border-0">
                       <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Package className="w-6 h-6 text-gray-500" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 truncate">{item.product.name}</p>
@@ -1084,194 +1071,54 @@ Please confirm this order. Thank you!
                   ))}
                 </div>
 
-                {/* Pricing Breakdown */}
-                <div className="space-y-3 border-t border-gray-200 pt-4">
-                  {discountAmount > 0 ? (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Subtotal</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400 line-through text-sm">
-                            ₱{totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                          </span>
-                          <span className="font-semibold text-green-600">
-                            ₱{(totalPrice - discountAmount).toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center bg-green-50 -mx-4 px-4 py-3 rounded-lg border border-green-200">
-                        <span className="flex items-center gap-2 text-green-700 font-semibold text-sm">
-                          <Tag className="w-4 h-4" />
-                          Discount ({appliedPromo?.code})
-                        </span>
-                        <span className="font-bold text-green-700">
-                          -₱{discountAmount.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between text-gray-600">
-                      <span>Subtotal</span>
-                      <span className="font-semibold">₱{totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
-                    <span className="font-semibold">₱{finalShippingFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                    <span className="text-lg font-bold text-gray-900">Total</span>
-                    <span className="text-xl font-bold text-gray-900">₱{finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span>
-                  </div>
+                {/* Subtotal */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-gray-600">Subtotal:</p>
+                  <p className="text-lg font-bold text-gray-900">₱{totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
                 </div>
 
-                {/* Security Badge */}
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Secure Payment</span>
+                {/* Shipping Fee */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-gray-600">Shipping Fee:</p>
+                  <p className="text-lg font-bold text-gray-900">₱{shippingFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
+                </div>
+
+                {/* Courier Fee */}
+                {courierFee > 0 && (
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-600">Courier Fee:</p>
+                    <p className="text-lg font-bold text-gray-900">₱{courierFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
                   </div>
-                  <p className="text-xs text-blue-700 mt-1">Your payment information is encrypted and secure</p>
+                )}
+
+                {/* Discount */}
+                {discountAmount > 0 && (
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-gray-600">Discount:</p>
+                    <p className="text-lg font-bold text-red-600">-₱{discountAmount.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
+                  </div>
+                )}
+
+                {/* Total */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-lg font-bold text-gray-900">Total:</p>
+                  <p className="text-lg font-bold text-gray-900">₱{finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  if (step === 'confirmation') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white flex items-center justify-center px-4 py-12">
-        <div className="max-w-2xl w-full">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center border-2 border-navy-700/30">
-            <div className="bg-gradient-to-br from-gold-500 to-gold-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce border-2 border-gold-700">
-              <ShieldCheck className="w-14 h-14 text-black" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2 flex-wrap">
-              <span className="bg-gradient-to-r from-black to-gray-900 bg-clip-text text-transparent">COMPLETE YOUR ORDER</span>
-              <Sparkles className="w-7 h-7 text-gold-600" />
-            </h1>
-            <p className="text-gray-600 mb-8 text-base md:text-lg leading-relaxed">
-              Copy the order message below and send it via Messenger along with your payment screenshot.
-            </p>
-
-            {/* Order Message Display */}
-            <div className="bg-gray-50 rounded-2xl p-6 mb-6 text-left border-2 border-navy-700/30">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-navy-900 flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-gold-600" />
-                  Your Order Message
-                </h3>
-                <button
-                  onClick={handleCopyMessage}
-                  className="flex items-center gap-2 px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white rounded-lg font-medium transition-all text-sm shadow-md hover:shadow-lg border border-navy-900/20"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" />
-                      Copy
-                    </>
-                  )}
-                </button>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-gray-300 max-h-64 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
-                  {orderMessage}
-                </pre>
-              </div>
-              {copied && (
-                <p className="text-green-600 text-sm mt-2 flex items-center gap-1">
-                  <Check className="w-4 h-4" />
-                  Message copied to clipboard! Paste it in Messenger along with your payment screenshot.
-                </p>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3 mb-8">
-              <button
-                onClick={handleOpenContact}
-                className="w-full bg-navy-900 hover:bg-navy-800 text-white py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all flex items-center justify-center gap-2 border border-navy-900/20"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Open Messenger
-              </button>
-
-              {!contactOpened && (
-                <p className="text-sm text-gray-600">
-                  💡 If Messenger doesn't open, copy the message above and visit our page manually
-                </p>
-              )}
-            </div>
-
-            <div className="bg-gradient-to-r from-gold-50 to-gold-100/50 rounded-2xl p-6 mb-8 text-left border-2 border-navy-700/30">
-              <h3 className="font-bold text-navy-900 mb-4 flex items-center gap-2">
-                What Happens Next?
-                <Sparkles className="w-5 h-5 text-gold-600" />
-              </h3>
-              <ul className="space-y-3 text-sm md:text-base text-gray-700">
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">1️⃣</span>
-                  <span>Send your order details and payment screenshot — we'll confirm within 24 hours or less.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">2️⃣</span>
-                  <span>Your products are carefully packed and prepared for shipping.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">3️⃣</span>
-                  <span>Payments made before 11 AM are shipped the same day.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-2xl">4️⃣</span>
-                  <span>Tracking numbers are sent via Messenger from 11 PM onwards.</span>
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                window.location.href = '/';
-              }}
-              className="w-full bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-600 hover:to-gold-700 text-black py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all flex items-center justify-center gap-2 border-2 border-gold-700"
-            >
-              <Heart className="w-5 h-5 animate-pulse" />
-              Continue Shopping
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 'details') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 py-4 sm:py-6 lg:py-8">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          {/* Mobile-Optimized Header */}
-          <div className="flex items-center justify-between mb-6 sm:mb-8">
+            {/* Mobile Back Button */}
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 group bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md border border-gray-200"
+              className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium transition-all duration-200 group bg-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:shadow-md border border-gray-200"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm sm:text-base font-medium">Back to Cart</span>
             </button>
             
             {/* Mobile Progress Indicator */}
-            <div className="flex items-center gap-2 sm:hidden">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${getStepClassName(step, 'details', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg')}`}>
+            <div className="flex items-center gap-2 sm:hidden bg-white px-3 py-2 rounded-lg shadow-sm border border-gray-200">
+              <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${getStepClassName(step, 'details', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg')}`}>
                 {getStepIndicator(step)}
               </div>
               <span className="text-xs font-medium text-gray-600">
@@ -1280,8 +1127,19 @@ Please confirm this order. Thank you!
             </div>
           </div>
 
+          {/* Mobile Header */}
+          <div className="sm:hidden mb-6">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent mb-2 flex items-center gap-2">
+              Checkout
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-1.5 rounded-lg shadow-lg">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+            </h1>
+            <p className="text-gray-600 text-sm">Complete your order in just a few simple steps</p>
+          </div>
+
           {/* Desktop Header */}
-          <div className="hidden sm:block mb-8 lg:mb-10">
+          <div className="hidden sm:block mb-6 lg:mb-8">
             <h1 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent mb-4 flex items-center gap-3">
               Checkout
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 rounded-xl shadow-lg">
@@ -1292,64 +1150,64 @@ Please confirm this order. Thank you!
           </div>
 
           {/* Desktop Progress Indicator */}
-          <div className="hidden sm:block mb-8 lg:mb-10">
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+          <div className="hidden sm:block mb-6 lg:mb-8">
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between relative">
                 <div className="absolute left-0 top-1/2 h-1 bg-gray-200 w-full -translate-y-1/2"></div>
                 <div className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-blue-500 to-blue-600 -translate-y-1/2 transition-all duration-700 ease-out" style={{width: getProgressWidth(step)}}></div>
                 
                 <div className="relative flex flex-col items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${getStepClassName(step, 'details', 'bg-green-500 text-white', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
+                  <div className={`w-8 sm:w-12 h-8 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 ${getStepClassName(step, 'details', 'bg-green-500 text-white', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
                     {getStepIndicator(step)}
                   </div>
-                  <span className="text-sm font-medium mt-2 text-gray-700">Details</span>
+                  <span className="text-xs sm:text-sm font-medium mt-1 sm:mt-2 text-gray-700">Details</span>
                 </div>
                 
                 <div className="relative flex flex-col items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${getStepClassName(step, 'payment', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
+                  <div className={`w-8 sm:w-12 h-8 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 ${getStepClassName(step, 'payment', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
                     {getPaymentStepIndicator(step)}
                   </div>
-                  <span className="text-sm font-medium mt-2 text-gray-700">Payment</span>
+                  <span className="text-xs sm:text-sm font-medium mt-1 sm:mt-2 text-gray-700">Payment</span>
                 </div>
                 
                 <div className="relative flex flex-col items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${getStepClassName(step, 'confirmation', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
+                  <div className={`w-8 sm:w-12 h-8 sm:h-12 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 ${getStepClassName(step, 'confirmation', 'bg-gray-300 text-gray-600', 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg scale-110 ring-4 ring-blue-200')}`}>
                     3
                   </div>
-                  <span className="text-sm font-medium mt-2 text-gray-700">Complete</span>
+                  <span className="text-xs sm:text-sm font-medium mt-1 sm:mt-2 text-gray-700">Complete</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6 xl:gap-8">
             {/* Main Form */}
-            <div className="xl:col-span-2 space-y-6 lg:space-y-8">
+            <div className="xl:col-span-2 space-y-4 lg:space-y-6">
               {/* User Account Section */}
-              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-200/50">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-md">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-2 sm:p-3 rounded-xl shadow-md">
+                      <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Account Information</h2>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Account Information</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
                         {isLoggedIn ? `Welcome back, ${userFullName}!` : 'Enter your details to continue'}
                       </p>
                     </div>
                   </div>
                   {isLoggedIn && (
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-lg border border-green-200">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-green-200">
+                        <div className="w-4 h-4 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
-                        <span className="text-sm font-semibold text-green-700">Verified</span>
+                        <span className="text-xs sm:text-sm font-semibold text-green-700">Verified</span>
                       </div>
                     </div>
                   )}
@@ -1360,7 +1218,7 @@ Please confirm this order. Thank you!
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="lg:col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <label className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                           <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
@@ -1376,7 +1234,7 @@ Please confirm this order. Thank you!
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
@@ -1392,7 +1250,7 @@ Please confirm this order. Thank you!
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
@@ -1482,25 +1340,130 @@ Please confirm this order. Thank you!
               </div>
 
               {/* Shipping Address */}
-              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-200/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 p-3 rounded-xl shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+              <div className="bg-white rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 p-2 sm:p-3 rounded-xl shadow-md">
+                      <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Delivery Address</h2>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Where should we deliver your order?</p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Delivery Address</h2>
-                    <p className="text-sm text-gray-600 mt-1">Where should we deliver your order?</p>
+                  
+                  {/* Mobile Location Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <button
+                      onClick={() => {
+                        if (navigator.geolocation) {
+                          navigator.geolocation.getCurrentPosition(
+                            async (position) => {
+                              const { latitude, longitude } = position.coords;
+                              try {
+                                const response = await fetch(
+                                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+                                );
+                                const data = await response.json();
+                                
+                                if (data && data.address) {
+                                  setAddress(data.address.road || data.address.house_number || '');
+                                  setBarangay(data.address.suburb || data.address.neighbourhood || '');
+                                  setCity(data.address.city || data.address.town || data.address.village || '');
+                                  setState(data.address.state || data.address.province || '');
+                                  setZipCode(data.address.postcode || '');
+                                  
+                                  // Show map modal with location
+                                  Swal.fire({
+                                    title: 'Location Detected!',
+                                    html: `
+                                      <div style="text-align: center;">
+                                        <p>Your address has been filled automatically.</p>
+                                        <img src="https://maps.openstreetmap.org/staticmap?center=${latitude},${longitude}&zoom=16&size=300x200&markers=${latitude},${longitude}" 
+                                             style="max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0;" 
+                                             alt="Your Location" />
+                                        <p style="font-size: 12px; color: #666;">Please verify and edit if needed.</p>
+                                      </div>
+                                    `,
+                                    icon: 'success',
+                                    showConfirmButton: true,
+                                    confirmButtonText: 'Got it!',
+                                    width: 350,
+                                  });
+                                }
+                              } catch (error) {
+                                Swal.fire({
+                                  title: 'Location Error',
+                                  text: 'Unable to get address from coordinates. Please enter manually.',
+                                  icon: 'warning',
+                                });
+                              }
+                            },
+                            (error) => {
+                              let errorMessage = 'Unable to get location.';
+                              switch (error.code) {
+                                case error.PERMISSION_DENIED:
+                                  errorMessage = 'Location access denied. Please enable location services.';
+                                  break;
+                                case error.POSITION_UNAVAILABLE:
+                                  errorMessage = 'Location information is unavailable.';
+                                  break;
+                                case error.TIMEOUT:
+                                  errorMessage = 'Location request timed out.';
+                                  break;
+                              }
+                              Swal.fire({
+                                title: 'Location Error',
+                                text: errorMessage,
+                                icon: 'warning',
+                              });
+                            }
+                          );
+                        } else {
+                          Swal.fire({
+                            title: 'Not Supported',
+                            text: 'Geolocation is not supported by your browser.',
+                            icon: 'warning',
+                          });
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-medium animate-scale"
+                    >
+                      <Navigation className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Use My Location</span>
+                      <span className="sm:hidden">Location</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (address && city) {
+                          const mapQuery = encodeURIComponent(`${address}, ${city}, ${state}`);
+                          window.open(`https://www.openstreetmap.org/search?query=${mapQuery}`, '_blank');
+                        } else {
+                          Swal.fire({
+                            title: 'Address Required',
+                            text: 'Please enter your address first to view it on the map.',
+                            icon: 'info',
+                          });
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
+                    >
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">View on Map</span>
+                      <span className="sm:hidden">Map</span>
+                    </button>
                   </div>
                 </div>
                 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div className="lg:col-span-2">
-                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-sm font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Street Address *
@@ -1509,14 +1472,14 @@ Please confirm this order. Thank you!
                         type="text"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base shadow-sm hover:shadow-md"
+                        className="w-full px-3 py-3 sm:px-4 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md"
                         placeholder="123 Rizal Street, Poblacion"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-sm font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Barangay *
@@ -1525,14 +1488,14 @@ Please confirm this order. Thank you!
                         type="text"
                         value={barangay}
                         onChange={(e) => setBarangay(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base shadow-sm hover:shadow-md"
+                        className="w-full px-3 py-3 sm:px-4 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md"
                         placeholder="San Antonio"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-sm font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         City *
@@ -1541,14 +1504,14 @@ Please confirm this order. Thank you!
                         type="text"
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base shadow-sm hover:shadow-md"
+                        className="w-full px-3 py-3 sm:px-4 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md"
                         placeholder="Quezon City"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-sm font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         Province *
@@ -1557,14 +1520,14 @@ Please confirm this order. Thank you!
                         type="text"
                         value={state}
                         onChange={(e) => setState(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base shadow-sm hover:shadow-md"
+                        className="w-full px-3 py-3 sm:px-4 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md"
                         placeholder="Metro Manila"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <label className="text-sm font-bold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
                         ZIP/Postal Code *
@@ -1573,7 +1536,7 @@ Please confirm this order. Thank you!
                         type="text"
                         value={zipCode}
                         onChange={(e) => setZipCode(e.target.value)}
-                        className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-base shadow-sm hover:shadow-md"
+                        className="w-full px-3 py-3 sm:px-4 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-sm sm:text-base shadow-sm hover:shadow-md"
                         placeholder="1100"
                         required
                       />
@@ -1656,60 +1619,134 @@ Please confirm this order. Thank you!
                 </div>
               </div>
 
-              {/* Courier Selection */}
+              {/* Payment Type Selection */}
+              <div className="bg-white rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 border border-gray-200/50">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 p-2 sm:p-3 rounded-xl shadow-md">
+                    <CreditCard className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Payment Type</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Choose how you want to pay</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <button
+                    onClick={() => {setPaymentType('prepaid'); setIsCOD(false); setSelectedCourier('');}}
+                    className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 ${
+                      paymentType === 'prepaid'
+                        ? 'border-green-600 bg-green-50 shadow-lg scale-105'
+                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                        <CreditCard className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <p className="font-bold text-gray-900 text-sm sm:text-base">Prepaid</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Pay via GCash, Maya, Bank Transfer</p>
+                      <p className="text-xs text-green-600 mt-1 sm:mt-2">Pay First → Ship Fast</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {setPaymentType('cod'); setIsCOD(true); setSelectedCourier('LBC');}}
+                    className={`p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 ${
+                      paymentType === 'cod'
+                        ? 'border-orange-600 bg-orange-50 shadow-lg scale-105'
+                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                        <Package className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      <p className="font-bold text-gray-900 text-sm sm:text-base">Cash on Delivery</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">Pay when you receive</p>
+                      <p className="text-xs text-orange-600 mt-1 sm:mt-2">COD Fee Applies</p>
+                    </div>
+                  </button>
+                </div>
+                {paymentType === 'cod' && (
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-xs sm:text-sm text-orange-800 flex items-center gap-2">
+                      <span className="text-sm sm:text-base">💰</span>
+                      <strong className="text-xs sm:text-sm">COD Information:</strong> Additional ₱150 COD fee will be charged. Delivery time may be longer.
+                    </p>
+                  </div>
+                )}
+                {paymentType === 'prepaid' && (
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs sm:text-sm text-green-800 flex items-center gap-2">
+                      <span className="text-sm sm:text-base">⚡</span>
+                      <strong className="text-xs sm:text-sm">Prepaid Benefit:</strong> Faster delivery processing and no additional fees.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Courier Selection - Dynamic based on payment type */}
               <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-200/50">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-3 rounded-xl shadow-md">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-md">
                     <Package className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Delivery Method</h2>
-                    <p className="text-sm text-gray-600 mt-1">Choose your preferred courier</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {paymentType === 'prepaid' ? 'Choose your preferred courier' : 'COD available with LBC'}
+                    </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <button
-                    onClick={() => {setSelectedCourier('LBC'); setIsCOD(true);}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                      selectedCourier === 'LBC'
-                        ? 'border-orange-600 bg-orange-50 shadow-lg scale-105'
-                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+                
+                {paymentType === 'prepaid' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => {setSelectedCourier('J&T'); setIsCOD(false);}}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        selectedCourier === 'J&T'
+                          ? 'border-blue-600 bg-blue-50 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
                       }`}
-                  >
-                    <p className="font-bold text-gray-900">LBC</p>
-                    <p className="text-xs text-gray-600 mt-1">Cash on Delivery</p>
-                    <p className="text-xs text-orange-600 mt-2">COD Fee: ₱150</p>
-                  </button>
-                  <button
-                    onClick={() => {setSelectedCourier('J&T'); setIsCOD(false);}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                      selectedCourier === 'J&T'
-                        ? 'border-blue-600 bg-blue-50 shadow-lg scale-105'
-                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+                    >
+                      <p className="font-bold text-gray-900">J&T Express</p>
+                      <p className="text-xs text-gray-600 mt-1">Payment First</p>
+                      <p className="text-xs text-green-600 mt-2">Free Shipping</p>
+                    </button>
+                    <button
+                      onClick={() => {setSelectedCourier('LALAMOVE'); setIsCOD(false);}}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        selectedCourier === 'LALAMOVE'
+                          ? 'border-purple-600 bg-purple-50 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
                       }`}
-                  >
-                    <p className="font-bold text-gray-900">J&T Express</p>
-                    <p className="text-xs text-gray-600 mt-1">Payment First</p>
-                    <p className="text-xs text-green-600 mt-2">Free Shipping</p>
-                  </button>
-                  <button
-                    onClick={() => {setSelectedCourier('LALAMOVE'); setIsCOD(false);}}
-                    className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                      selectedCourier === 'LALAMOVE'
-                        ? 'border-purple-600 bg-purple-50 shadow-lg scale-105'
-                        : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
+                    >
+                      <p className="font-bold text-gray-900">Lalamove</p>
+                      <p className="text-xs text-gray-600 mt-1">Payment First</p>
+                      <p className="text-xs text-purple-600 mt-2">Same Day</p>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                    <button
+                      onClick={() => {setSelectedCourier('LBC'); setIsCOD(true);}}
+                      className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                        selectedCourier === 'LBC'
+                          ? 'border-orange-600 bg-orange-50 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 bg-white hover:shadow-md'
                       }`}
-                  >
-                    <p className="font-bold text-gray-900">Lalamove</p>
-                    <p className="text-xs text-gray-600 mt-1">Payment First</p>
-                    <p className="text-xs text-purple-600 mt-2">Same Day</p>
-                  </button>
-                </div>
+                    >
+                      <p className="font-bold text-gray-900">LBC</p>
+                      <p className="text-xs text-gray-600 mt-1">Cash on Delivery</p>
+                      <p className="text-xs text-orange-600 mt-2">COD Fee: ₱150</p>
+                    </button>
+                  </div>
+                )}
+                
                 {selectedCourier === 'LBC' && (
                   <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800 flex items-center gap-2">
                       <span>⚠️</span>
-                      <strong>COD Warning:</strong> LBC delivery is slower. Consider J&T for faster delivery.
+                      <strong>Delivery Notice:</strong> LBC delivery typically takes 3-5 business days.
                     </p>
                   </div>
                 )}
@@ -1751,179 +1788,77 @@ Please confirm this order. Thank you!
 
             {/* Order Summary Sidebar */}
             <div className="xl:col-span-1">
-              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-4 sm:p-6 lg:p-7 sticky top-24 border border-gray-200/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-3 sm:p-4 lg:p-6 sticky top-20 sm:top-24 border border-gray-200/50">
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-2 sm:p-3 rounded-xl shadow-md">
+                    <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Order Summary</h2>
-                    <p className="text-sm text-gray-600 mt-1">{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</p>
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Order Summary</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6 max-h-48 sm:max-h-64 overflow-y-auto">
                   {cartItems.map((item, index) => (
-                    <div key={index} className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                    <div key={index} className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 text-sm">{item.product.name}</h4>
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{item.product.name}</h4>
                           {item.variation && (
-                            <p className="text-xs text-purple-600 mt-1 font-medium">{item.variation.name}</p>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-1">{item.variation.name}</p>
                           )}
-                          {item.option && (
-                            <p className="text-xs text-blue-600 mt-1">{item.option.name}</p>
-                          )}
-                          {item.product.purity_percentage && item.product.purity_percentage > 0 ? (
-                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              {item.product.purity_percentage}% Purity
-                            </p>
-                          ) : null}
                         </div>
-                        <div className="text-right">
-                          <span className="font-bold text-gray-900 text-sm block">
-                            ₱{(item.price * item.quantity).toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                          </span>
-                          <span className="text-xs text-gray-500">×{item.quantity}</span>
+                        <div className="text-right ml-2">
+                          <p className="font-bold text-gray-900 text-sm sm:text-base">₱{item.price.toLocaleString()}</p>
+                          <p className="text-xs text-gray-500">×{item.quantity}</p>
                         </div>
                       </div>
-                      {item.option && item.option.description && (
-                        <p className="text-xs text-gray-400 mt-2 italic bg-gray-50 p-2 rounded">{item.option.description}</p>
-                      )}
                     </div>
                   ))}
                 </div>
 
-                <div className="space-y-4 mb-6 border-t border-gray-200 pt-6">
-                  {/* Promo Code Input */}
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-                    <p className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-blue-600" />
-                      Promo Code
-                    </p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Enter code"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none uppercase font-medium"
-                        disabled={!!appliedPromo || isApplyingPromo}
-                      />
-                      {appliedPromo ? (
-                        <button
-                          onClick={() => {
-                            setAppliedPromo(null);
-                            setDiscountAmount(0);
-                            setPromoCode('');
-                            setPromoSuccess('');
-                          }}
-                          className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-sm"
-                        >
-                          Remove
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleApplyPromoCode}
-                          disabled={!promoCode || isApplyingPromo}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                        >
-                          {isApplyingPromo ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Apply'
-                          )}
-                        </button>
-                      )}
-                    </div>
-                    {promoError && (
-                      <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
-                        <XCircle className="w-3.5 h-3.5" />
-                        {promoError}
-                      </p>
-                    )}
-                    {promoSuccess && (
-                      <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        {promoSuccess}
-                      </p>
-                    )}
+                {/* Price Breakdown */}
+                <div className="space-y-3 border-t border-gray-200 pt-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium text-gray-900">₱{totalPrice.toLocaleString()}</span>
                   </div>
-
-                  {/* Pricing Breakdown */}
-                  <div className="space-y-3">
-                    {discountAmount > 0 ? (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">Subtotal</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400 line-through text-sm">
-                              ₱{totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                            </span>
-                            <span className="font-semibold text-green-600">
-                              ₱{(totalPrice - discountAmount).toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center bg-green-50 -mx-4 px-4 py-3 rounded-lg border border-green-200">
-                          <span className="flex items-center gap-2 text-green-700 font-semibold text-sm">
-                            <Tag className="w-4 h-4" />
-                            Discount ({appliedPromo?.code})
-                          </span>
-                          <span className="font-bold text-green-700">
-                            -₱{discountAmount.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex justify-between text-gray-600">
-                        <span>Subtotal</span>
-                        <span className="font-semibold">₱{totalPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between text-gray-600">
-                      <span>Shipping</span>
-                      <span className="font-medium text-blue-600">
-                        {shippingLocation ? `₱${shippingFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}` : 'Select location'}
-                      </span>
+                  {shippingLocation && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Shipping Fee</span>
+                      <span className="font-medium text-gray-900">₱{shippingFee.toLocaleString()}</span>
                     </div>
-
-                    {courierFee > 0 && (
-                      <div className="flex justify-between text-gray-600">
-                        <span>COD Fee ({selectedCourier})</span>
-                        <span className="font-medium text-orange-600">
-                          ₱{courierFee.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-bold text-gray-900">Total</span>
-                        <span className="text-xl font-bold text-gray-900">
-                          ₱{finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 0 })}
-                        </span>
-                      </div>
+                  )}
+                  {selectedCourier && courierFee > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Courier Fee</span>
+                      <span className="font-medium text-gray-900">₱{courierFee.toLocaleString()}</span>
                     </div>
+                  )}
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Discount</span>
+                      <span className="font-medium text-green-600">-₱{discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-200">
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-gray-900">₱{finalTotal.toLocaleString()}</span>
                   </div>
                 </div>
 
-                {/* Savings Message */}
-                {discountAmount > 0 && (
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-3 text-center -mx-6 -mb-6">
-                    <p className="text-white text-sm font-bold flex items-center justify-center gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      You saved ₱{discountAmount.toLocaleString('en-PH', { minimumFractionDigits: 0 })}!
+                {/* Security Badge */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-3 sm:p-4 border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    <p className="text-xs sm:text-sm text-gray-700">
+                      <strong>Secure Checkout:</strong> Your information is protected and encrypted
                     </p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -1931,9 +1866,6 @@ Please confirm this order. Thank you!
       </div>
     );
   }
-
-  // Default return (should not reach here)
-  return null;
 };
 
 export default Checkout;
