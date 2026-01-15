@@ -84,19 +84,14 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
   const [notes, setNotes] = useState('');
   const [orderMessage, setOrderMessage] = useState<string>('');
   const [copied, setCopied] = useState(false);
-  const [contactOpened, setContactOpened] = useState(false);
 
   // Payment Proof
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const { uploadImage, uploading: isUploadingProof } = useImageUpload('payment-proofs');
   
   // Promo Code State
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<any>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
-  const [promoError, setPromoError] = useState('');
-  const [promoSuccess, setPromoSuccess] = useState('');
+  const [appliedPromo] = useState<any>(null);
+  const [discountAmount] = useState(0);
 
   // Helper functions to resolve TypeScript comparison errors
   const getStepClassName = (currentStep: string, targetStep: string, baseClass: string, activeClass: string) => {
@@ -206,88 +201,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     }
   };
 
-  // Handle Promo Code Application
-  const handleApplyPromoCode = async () => {
-    setPromoError('');
-    setPromoSuccess('');
-    setAppliedPromo(null);
-    setDiscountAmount(0);
-
-    const code = promoCode.trim().toUpperCase();
-    if (!code) {
-      setPromoError('Please enter a promo code');
-      return;
-    }
-
-    setIsApplyingPromo(true);
-
-    try {
-      const { data: promo, error } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .eq('code', code)
-        .eq('active', true)
-        .single();
-
-      if (error || !promo) {
-        setPromoError('Invalid or inactive promo code');
-        setIsApplyingPromo(false);
-        return;
-      }
-
-      // Check date validity
-      const now = new Date();
-      if (promo.start_date && new Date(promo.start_date) > now) {
-        setPromoError('Promo code is not yet valid');
-        setIsApplyingPromo(false);
-        return;
-      }
-      if (promo.end_date && new Date(promo.end_date) < now) {
-        setPromoError('Promo code has expired');
-        setIsApplyingPromo(false);
-        return;
-      }
-
-      // Check usage limits
-      if (promo.usage_limit && promo.usage_count >= promo.usage_limit) {
-        setPromoError('Promo code usage limit reached');
-        setIsApplyingPromo(false);
-        return;
-      }
-
-      // Check minimum purchase
-      if (totalPrice < promo.min_purchase_amount) {
-        setPromoError(`Minimum purchase of ₱${promo.min_purchase_amount} required`);
-        setIsApplyingPromo(false);
-        return;
-      }
-
-      // Calculate discount
-      let discount = 0;
-      if (promo.discount_type === 'percentage') {
-        discount = (totalPrice * promo.discount_value) / 100;
-        if (promo.max_discount_amount) {
-          discount = Math.min(discount, promo.max_discount_amount);
-        }
-      } else {
-        discount = promo.discount_value;
-      }
-
-      // Ensure discount doesn't exceed total (excluding shipping usually, ensuring not negative)
-      // Here we allow discount to cover shipping too? Usually not, but finalTotal math handles it.
-      // Ideally discount applies to subtotal.
-      discount = Math.min(discount, totalPrice);
-
-      setDiscountAmount(discount);
-      setAppliedPromo(promo);
-      setPromoSuccess(`Promo code applied! You saved ₱${discount.toLocaleString()}`);
-    } catch (err) {
-      console.error('Error applying promo:', err);
-      setPromoError('Failed to apply promo code');
-    } finally {
-      setIsApplyingPromo(false);
-    }
-  };
 
   // Authentication handlers
   const handleLogin = async () => {
@@ -837,13 +750,9 @@ Please confirm this order. Thank you!
               const contactWindow = window.open(contactUrl, '_blank');
               if (!contactWindow || contactWindow.closed || typeof contactWindow.closed === 'undefined') {
                 console.warn('⚠️ Popup blocked or contact method failed to open');
-                setContactOpened(false);
-              } else {
-                setContactOpened(true);
               }
             } catch (error) {
               console.error('❌ Error opening contact method:', error);
-              setContactOpened(false);
             }
           }, 500);
         }

@@ -60,6 +60,10 @@ const multerErrorHandler = (req, res, next) => {
 
 // Register new user
 router.post('/register', (req, res, next) => {
+  console.log('=== REGISTER ROUTE HIT ===');
+  console.log('Method:', req.method);
+  console.log('Content-Type:', req.get('Content-Type'));
+  
   upload.single('photo')(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);
