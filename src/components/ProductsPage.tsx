@@ -13,8 +13,8 @@ const ProductsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCartClick = () => {
-    // Navigate to home page with cart state
-    navigate('/?view=cart');
+    // Navigate to shop page with cart state
+    navigate('/shop?view=cart');
   };
 
   const handleMenuClick = () => {
