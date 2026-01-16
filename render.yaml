@@ -13,15 +13,3 @@ services:
         value: 10000
     healthCheckPath: /api/health
     autoDeploy: true
-    
-  # Static file service for uploads (if needed)
-  - type: web
-    name: study-pulse-uploads
-    env: static
-    plan: free
-    buildCommand: "mkdir -p uploads/avatars"
-    staticPublishPath: ./uploads
-    routes:
-      - type: rewrite
-        source: /uploads/*
-        destination: /uploads/$1
