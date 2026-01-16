@@ -175,6 +175,28 @@
       "updatedAt": "2026-01-03T05:27:22.459Z",
       "isActive": true,
       "role": "user"
+    },
+    {
+      "id": "1768558515217",
+      "email": "newuser@example.com",
+      "fullName": "New User",
+      "password": "password123",
+      "photo": null,
+      "createdAt": "2026-01-16T10:15:15.217Z",
+      "updatedAt": "2026-01-16T10:15:15.217Z",
+      "isActive": true,
+      "role": "user"
+    },
+    {
+      "id": "1768558637448",
+      "email": "testuser2@example.com",
+      "fullName": "Test User 2",
+      "password": "password123",
+      "photo": null,
+      "createdAt": "2026-01-16T10:17:17.448Z",
+      "updatedAt": "2026-01-16T10:17:17.448Z",
+      "isActive": true,
+      "role": "user"
     }
   ]
 }

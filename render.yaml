@@ -1,0 +1,27 @@
+services:
+  # Backend API Service
+  - type: web
+    name: study-pulse-backend
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node src/server.js"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    healthCheckPath: /api/health
+    autoDeploy: true
+    
+  # Static file service for uploads (if needed)
+  - type: web
+    name: study-pulse-uploads
+    env: static
+    plan: free
+    buildCommand: "mkdir -p uploads/avatars"
+    staticPublishPath: ./uploads
+    routes:
+      - type: rewrite
+        source: /uploads/*
+        destination: /uploads/$1

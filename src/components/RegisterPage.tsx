@@ -178,7 +178,13 @@ const RegisterPage: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      const response = await fetch('/api/users/register', {
+      // Use Render backend for production, localhost for development
+      const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+      const apiUrl = isDevelopment 
+        ? '/api/users/register' 
+        : 'https://study-pulse-backend.onrender.com/api/users/register';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
         signal: controller.signal
@@ -205,7 +211,12 @@ const RegisterPage: React.FC = () => {
         localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
         
         // Send welcome email
-        await fetch('/api/email/welcome', {
+        const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+        const emailApiUrl = isDevelopment 
+          ? '/api/email/welcome'
+          : 'https://study-pulse-backend.onrender.com/api/email/welcome';
+        
+        await fetch(emailApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

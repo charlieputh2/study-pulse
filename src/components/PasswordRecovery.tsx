@@ -279,7 +279,7 @@ const PasswordRecovery: React.FC<PasswordRecoveryProps> = ({ onBack }) => {
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-lg text-center text-2xl font-mono"
+              className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-2xl text-center font-mono"
               placeholder="000000"
               maxLength={6}
               required
