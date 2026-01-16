@@ -182,7 +182,7 @@ const RegisterPage: React.FC = () => {
       const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
       const apiUrl = isDevelopment 
         ? '/api/users/register' 
-        : 'https://study-pulse-backend.onrender.com/api/users/register';
+        : 'https://study-pulse-b7du.onrender.com/api/users/register';
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -214,7 +214,7 @@ const RegisterPage: React.FC = () => {
         const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
         const emailApiUrl = isDevelopment 
           ? '/api/email/welcome'
-          : 'https://study-pulse-backend.onrender.com/api/email/welcome';
+          : 'https://study-pulse-b7du.onrender.com/api/email/welcome';
         
         await fetch(emailApiUrl, {
           method: 'POST',

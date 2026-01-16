@@ -21,7 +21,7 @@ app.use(cors({
     'http://localhost:3000', 
     'http://localhost:5173', 
     'https://study-pulse-ten.vercel.app',
-    'https://study-pulse-backend.onrender.com'
+    'https://study-pulse-b7du.onrender.com'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
