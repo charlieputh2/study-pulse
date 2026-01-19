@@ -42,7 +42,7 @@ const upload = multer({
       cb(new Error('Only image files are allowed'), false);
     }
   }
-});
+}).single('photo'); // Make photo optional by not requiring it
 
 // Custom multer error handler middleware
 const multerErrorHandler = (req, res, next) => {
@@ -58,12 +58,8 @@ const multerErrorHandler = (req, res, next) => {
   });
 };
 
-// Register new user
-router.post('/register', (req, res, next) => {
-  console.log('=== REGISTER ROUTE HIT ===');
-  console.log('Method:', req.method);
-  console.log('Content-Type:', req.get('Content-Type'));
-  
+// Optional photo upload middleware
+const optionalPhotoUpload = (req, res, next) => {
   upload.single('photo')(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);
@@ -74,7 +70,14 @@ router.post('/register', (req, res, next) => {
     }
     next();
   });
-}, async (req, res) => {
+};
+
+// Register new user
+router.post('/register', optionalPhotoUpload, async (req, res) => {
+  console.log('=== REGISTER ROUTE HIT ===');
+  console.log('Method:', req.method);
+  console.log('Content-Type:', req.get('Content-Type'));
+  console.log('Content-Length:', req.get('Content-Length'));
   try {
     console.log('=== REGISTRATION REQUEST ===');
     console.log('Request body keys:', Object.keys(req.body));
