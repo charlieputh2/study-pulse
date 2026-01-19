@@ -143,16 +143,29 @@ const RegisterPage: React.FC = () => {
       formData.append('confirmPassword', confirmPassword);
       formData.append('acceptTerms', acceptTerms.toString());
       
-      if (photo) {
+      // Log form data for debugging
+      console.log('Form data entries:');
+      for (let [key, value] of formData.entries()) {
+        if (key === 'photo') {
+          console.log(key, value instanceof File ? `File: ${value.name}, Size: ${value.size}` : value);
+        } else {
+          console.log(key, value);
+        }
+      }
+      
+      if (photo && photo.startsWith('data:image/')) {
         try {
           // Convert base64 to blob for upload
           const response = await fetch(photo);
           const blob = await response.blob();
           formData.append('photo', blob, 'profile.jpg');
+          console.log('Photo added to form data');
         } catch (photoError) {
           console.warn('Could not process photo, continuing without it:', photoError);
           // Continue without photo if there's an issue
         }
+      } else {
+        console.log('No photo provided or invalid photo format');
       }
 
       // Show loading notification
@@ -191,8 +204,13 @@ const RegisterPage: React.FC = () => {
         // Don't set Content-Type header when sending FormData - browser will set it automatically with boundary
       }).finally(() => clearTimeout(timeoutId));
 
+      console.log('Registration response status:', response.status);
+      console.log('Registration response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Registration error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       let data;
