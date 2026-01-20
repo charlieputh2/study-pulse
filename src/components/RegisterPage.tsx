@@ -213,23 +213,7 @@ const RegisterPage: React.FC = () => {
             localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
             
             // Send welcome email in background (don't wait for it)
-            const emailApiUrl = isDevelopment 
-              ? '/api/email/welcome'
-              : 'https://study-pulse-b7du.onrender.com/api/email/welcome';
-            
-            // Fire and forget - don't await this
-            fetch(emailApiUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: email.trim(),
-                userName: fullName.trim()
-              }),
-            }).catch(emailError => {
-              console.warn('Welcome email failed (non-blocking):', emailError);
-            });
+            // Email is now handled asynchronously in the backend to avoid blocking registration
 
             // Show success notification
             await Swal.fire({
@@ -242,7 +226,7 @@ const RegisterPage: React.FC = () => {
                   </p>
                   <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
                     <p style="color: #059669; font-size: 0.9rem;"> Account created successfully</p>
-                    <p style="color: #059669; font-size: 0.9rem;"> Welcome email sending...</p>
+                    <p style="color: #059669; font-size: 0.9rem;"> Welcome email will be sent shortly</p>
                     <p style="color: #059669; font-size: 0.9rem;"> Ready to shop</p>
                     ${photo ? '<p style="color: #059669; font-size: 0.9rem;"> Profile photo uploaded</p>' : ''}
                   </div>
@@ -278,18 +262,18 @@ const RegisterPage: React.FC = () => {
             });
             break; // Exit retry loop on failure
           }
-        } catch (fetchError) {
+        } catch (fetchError: any) {
           console.error('Fetch error (attempt', retryCount + 1, '):', fetchError);
           if (retryCount === maxRetries) {
             // Final attempt failed, show error
             Swal.close();
             let errorMessage = 'Registration failed. Please try again.';
             
-            if (fetchError.name === 'AbortError') {
+            if (fetchError?.name === 'AbortError') {
               errorMessage = 'Request timed out. Please check your connection and try again.';
-            } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
+            } else if (fetchError?.message && fetchError.message.includes('Failed to fetch')) {
               errorMessage = 'Network error. Please check your internet connection.';
-            } else if (fetchError.message) {
+            } else if (fetchError?.message) {
               errorMessage = fetchError.message;
             }
             

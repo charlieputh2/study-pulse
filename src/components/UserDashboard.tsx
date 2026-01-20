@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { 
-  User, 
   ShoppingBag, 
   Package, 
   Heart, 
@@ -16,7 +15,6 @@ import {
   Star,
   Bell,
   HelpCircle,
-  ChevronRight,
   Clock,
   Search,
   ShoppingCart,
@@ -154,12 +152,12 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             <select
               value={selectedOption?.id || ''}
               onChange={(e) => {
-                const option = product.options.find(opt => opt.id === e.target.value);
+                const option = product.options?.find(opt => opt.id === e.target.value);
                 setSelectedOption(option);
               }}
               className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             >
-              {product.options.map((option) => {
+              {product.options?.map((option) => {
                 const optionPrice = option.final_price || (selectedVariation ? selectedVariation.price : product.base_price) + option.price_adjustment;
                 return (
                   <option key={option.id} value={option.id}>
@@ -624,7 +622,7 @@ const UserDashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <AccountOverview user={user} onEdit={() => setIsEditing(true)} featuredProducts={featuredProducts} />;
+        return <AccountOverview user={user} onEdit={() => setIsEditing(true)} featuredProducts={featuredProducts} setActiveTab={setActiveTab} />;
       case 'products':
         return <ProductBrowser products={products} loading={loading} />;
       case 'featured':
@@ -642,7 +640,7 @@ const UserDashboard: React.FC = () => {
       case 'settings':
         return <AccountSettings />;
       default:
-        return <AccountOverview user={user} onEdit={() => setIsEditing(true)} featuredProducts={featuredProducts} />;
+        return <AccountOverview user={user} onEdit={() => setIsEditing(true)} featuredProducts={featuredProducts} setActiveTab={setActiveTab} />;
     }
   };
 
@@ -803,7 +801,7 @@ const UserDashboard: React.FC = () => {
         </aside>
 
         {/* Content Area */}
-        <main className="flex-1 bg-gray-50 min-h-screen">
+        <main className="flex-1 bg-gray-50 min-h-screen pb-20 lg:pb-0">
           <div className="max-w-6xl mx-auto p-4 lg:p-8">
             {isEditing ? (
               <div className="bg-white rounded-xl shadow-sm p-6">
@@ -912,9 +910,9 @@ const UserDashboard: React.FC = () => {
 };
 
 // Account Overview Component - Mobile App Style with Real Data
-const AccountOverview: React.FC<{ user: any; onEdit: () => void; featuredProducts: Product[] }> = ({ user, onEdit, featuredProducts }) => {
-  const [cartCount, setCartCount] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState(0);
+const AccountOverview: React.FC<{ user: any; onEdit: () => void; featuredProducts: Product[]; setActiveTab: (tab: string) => void }> = ({ user, onEdit, featuredProducts, setActiveTab }) => {
+  // const [cartCount, setCartCount] = useState(0);
+  // const [wishlistCount, setWishlistCount] = useState(0);
 
   // Calculate real stats from products
   const totalProducts = featuredProducts.length;
