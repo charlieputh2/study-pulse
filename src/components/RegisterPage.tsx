@@ -165,113 +165,150 @@ const RegisterPage: React.FC = () => {
         backdrop: 'rgba(0,0,0,0.5)',
       });
 
-      // API call to register user with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      // API call to register user with timeout and retry
+      let retryCount = 0;
+      const maxRetries = 2;
       
-      // Use Render backend for production, localhost for development
-      const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
-      const apiUrl = isDevelopment 
-        ? '/api/users/register' 
-        : 'https://study-pulse-b7du.onrender.com/api/users/register';
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeoutId));
+      while (retryCount <= maxRetries) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+          
+          // Use Render backend for production, localhost for development
+          const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+          const apiUrl = isDevelopment 
+            ? '/api/users/register' 
+            : 'https://study-pulse-b7du.onrender.com/api/users/register';
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          console.log('Registration response status:', response.status);
+          console.log('Registration response headers:', response.headers);
 
-      console.log('Registration response status:', response.status);
-      console.log('Registration response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Registration error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error('JSON parsing error:', jsonError);
-        throw new Error('Invalid server response');
-      }
-
-      // Close loading
-      Swal.close();
-
-      if (data.success) {
-        // Store user in localStorage
-        localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
-        
-        // Send welcome email in background (don't wait for it)
-        const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
-        const emailApiUrl = isDevelopment 
-          ? '/api/email/welcome'
-          : 'https://study-pulse-b7du.onrender.com/api/email/welcome';
-        
-        // Fire and forget - don't await this
-        fetch(emailApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-            userName: fullName.trim()
-          }),
-        }).catch(emailError => {
-          console.warn('Welcome email failed (non-blocking):', emailError);
-        });
-
-        // Show success notification
-        await Swal.fire({
-          icon: 'success',
-          title: 'Account Created Successfully',
-          html: `
-            <div style="text-align: center; animation: fadeIn 0.5s;">
-              <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                Welcome to Study Pulse, <strong style="color: #10b981;">${fullName}</strong>!
-              </p>
-              <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
-                <p style="color: #059669; font-size: 0.9rem;">✓ Account created successfully</p>
-                <p style="color: #059669; font-size: 0.9rem;">✓ Welcome email sending...</p>
-                <p style="color: #059669; font-size: 0.9rem;">✓ Ready to shop</p>
-                ${photo ? '<p style="color: #059669; font-size: 0.9rem;">✓ Profile photo uploaded</p>' : ''}
-              </div>
-              <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to login page...</p>
-            </div>
-          `,
-          timer: 2000,
-          timerProgressBar: true,
-          confirmButtonColor: '#10b981',
-          backdrop: 'rgba(0,0,0,0.5)',
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown'
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp'
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Registration error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
           }
-        });
-        
-        // Navigate to login page after successful registration
-        setTimeout(() => navigate('/login'), 2000);
-      } else {
-        setError(data.message || 'Registration failed');
-        await Swal.fire({
-          icon: 'error',
-          title: '❌ Registration Failed',
-          text: data.message || 'Unable to create your account. Please try again.',
-          confirmButtonColor: '#ef4444',
-          backdrop: 'rgba(0,0,0,0.5)',
-          showClass: {
-            popup: 'animate__animated animate__shakeX'
+
+          let data;
+          try {
+            data = await response.json();
+          } catch (jsonError) {
+            console.error('JSON parsing error:', jsonError);
+            throw new Error('Invalid server response');
           }
-        });
+
+          if (data.success) {
+            // Store user in localStorage
+            localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
+            
+            // Send welcome email in background (don't wait for it)
+            const emailApiUrl = isDevelopment 
+              ? '/api/email/welcome'
+              : 'https://study-pulse-b7du.onrender.com/api/email/welcome';
+            
+            // Fire and forget - don't await this
+            fetch(emailApiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: email.trim(),
+                userName: fullName.trim()
+              }),
+            }).catch(emailError => {
+              console.warn('Welcome email failed (non-blocking):', emailError);
+            });
+
+            // Show success notification
+            await Swal.fire({
+              icon: 'success',
+              title: 'Account Created Successfully',
+              html: `
+                <div style="text-align: center; animation: fadeIn 0.5s;">
+                  <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
+                    Welcome to Study Pulse, <strong style="color: #10b981;">${fullName}</strong>!
+                  </p>
+                  <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
+                    <p style="color: #059669; font-size: 0.9rem;"> Account created successfully</p>
+                    <p style="color: #059669; font-size: 0.9rem;"> Welcome email sending...</p>
+                    <p style="color: #059669; font-size: 0.9rem;"> Ready to shop</p>
+                    ${photo ? '<p style="color: #059669; font-size: 0.9rem;"> Profile photo uploaded</p>' : ''}
+                  </div>
+                  <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to login page...</p>
+                </div>
+              `,
+              timer: 2000,
+              timerProgressBar: true,
+              confirmButtonColor: '#10b981',
+              backdrop: 'rgba(0,0,0,0.5)',
+              showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+              },
+              hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+              }
+            });
+            
+            // Navigate to login page after successful registration
+            setTimeout(() => navigate('/login'), 2000);
+            break; // Exit retry loop on success
+          } else {
+            setError(data.message || 'Registration failed');
+            await Swal.fire({
+              icon: 'error',
+              title: ' Registration Failed',
+              text: data.message || 'Unable to create your account. Please try again.',
+              confirmButtonColor: '#ef4444',
+              backdrop: 'rgba(0,0,0,0.5)',
+              showClass: {
+                popup: 'animate__animated animate__shakeX'
+              }
+            });
+            break; // Exit retry loop on failure
+          }
+        } catch (fetchError) {
+          console.error('Fetch error (attempt', retryCount + 1, '):', fetchError);
+          if (retryCount === maxRetries) {
+            // Final attempt failed, show error
+            Swal.close();
+            let errorMessage = 'Registration failed. Please try again.';
+            
+            if (fetchError.name === 'AbortError') {
+              errorMessage = 'Request timed out. Please check your connection and try again.';
+            } else if (fetchError.message && fetchError.message.includes('Failed to fetch')) {
+              errorMessage = 'Network error. Please check your internet connection.';
+            } else if (fetchError.message) {
+              errorMessage = fetchError.message;
+            }
+            
+            setError(errorMessage);
+            await Swal.fire({
+              icon: 'error',
+              title: ' Error',
+              text: errorMessage,
+              confirmButtonColor: '#ef4444',
+              backdrop: 'rgba(0,0,0,0.5)',
+            });
+          } else {
+            // Retry after delay
+            retryCount++;
+            if (retryCount <= maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+            }
+          }
+        }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -281,7 +318,7 @@ const RegisterPage: React.FC = () => {
       
       if (error.name === 'AbortError') {
         errorMessage = 'Request timed out. Please check your connection and try again.';
-      } else if (error instanceof TypeError) {
+      } else if (error.message && error.message.includes('Failed to fetch')) {
         errorMessage = 'Network error. Please check your internet connection.';
       } else if (error.message) {
         errorMessage = error.message;
