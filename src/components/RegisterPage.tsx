@@ -208,13 +208,14 @@ const RegisterPage: React.FC = () => {
         // Store user in localStorage
         localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
         
-        // Send welcome email
+        // Send welcome email in background (don't wait for it)
         const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
         const emailApiUrl = isDevelopment 
           ? '/api/email/welcome'
           : 'https://study-pulse-b7du.onrender.com/api/email/welcome';
         
-        await fetch(emailApiUrl, {
+        // Fire and forget - don't await this
+        fetch(emailApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -223,6 +224,8 @@ const RegisterPage: React.FC = () => {
             email: email.trim(),
             userName: fullName.trim()
           }),
+        }).catch(emailError => {
+          console.warn('Welcome email failed (non-blocking):', emailError);
         });
 
         // Show success notification
@@ -236,14 +239,14 @@ const RegisterPage: React.FC = () => {
               </p>
               <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
                 <p style="color: #059669; font-size: 0.9rem;">✓ Account created successfully</p>
-                <p style="color: #059669; font-size: 0.9rem;">✓ Welcome email sent</p>
+                <p style="color: #059669; font-size: 0.9rem;">✓ Welcome email sending...</p>
                 <p style="color: #059669; font-size: 0.9rem;">✓ Ready to shop</p>
                 ${photo ? '<p style="color: #059669; font-size: 0.9rem;">✓ Profile photo uploaded</p>' : ''}
               </div>
               <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to login page...</p>
             </div>
           `,
-          timer: 3500,
+          timer: 2000,
           timerProgressBar: true,
           confirmButtonColor: '#10b981',
           backdrop: 'rgba(0,0,0,0.5)',
@@ -256,7 +259,7 @@ const RegisterPage: React.FC = () => {
         });
         
         // Navigate to login page after successful registration
-        setTimeout(() => navigate('/login'), 3500);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(data.message || 'Registration failed');
         await Swal.fire({
