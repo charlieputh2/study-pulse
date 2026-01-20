@@ -152,9 +152,9 @@ router.post('/register', flexibleBodyParser, async (req, res) => {
       });
     }
 
-    // Check terms acceptance (handle both boolean and string 'true')
-    const termsAccepted = acceptTerms === true || acceptTerms === 'true';
-    if (!termsAccepted) {
+    // Validate terms acceptance
+    if (acceptTerms !== 'true' && acceptTerms !== true) {
+      console.log('Validation failed - terms not accepted:', acceptTerms);
       return res.status(400).json({ 
         success: false, 
         message: 'You must accept the terms and conditions' 
