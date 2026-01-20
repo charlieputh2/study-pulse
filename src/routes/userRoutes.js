@@ -72,18 +72,51 @@ const optionalPhotoUpload = (req, res, next) => {
   });
 };
 
+// Middleware to handle both JSON and FormData
+const flexibleBodyParser = (req, res, next) => {
+  if (req.get('Content-Type') && req.get('Content-Type').includes('multipart/form-data')) {
+    // Use multer for FormData
+    upload.single('photo')(req, res, (err) => {
+      if (err) {
+        console.error('Multer error:', err);
+        return res.status(400).json({
+          success: false,
+          message: err.message || 'File upload error'
+        });
+      }
+      next();
+    });
+  } else {
+    // Use express.json for regular JSON
+    express.json()(req, res, next);
+  }
+};
+
 // Register new user
-router.post('/register', optionalPhotoUpload, async (req, res) => {
+router.post('/register', flexibleBodyParser, async (req, res) => {
   console.log('=== REGISTER ROUTE HIT ===');
   console.log('Method:', req.method);
   console.log('Content-Type:', req.get('Content-Type'));
-  console.log('Content-Length:', req.get('Content-Length'));
+  
   try {
-    console.log('=== REGISTRATION REQUEST ===');
-    console.log('Request body keys:', Object.keys(req.body));
-    console.log('File info:', req.file ? { filename: req.file.filename, size: req.file.size } : 'No file');
+    // Handle both JSON and FormData
+    let fullName, email, password, confirmPassword, acceptTerms;
     
-    const { fullName, email, password, confirmPassword, acceptTerms } = req.body;
+    if (req.get('Content-Type') && req.get('Content-Type').includes('multipart/form-data')) {
+      // FormData request
+      fullName = req.body.fullName;
+      email = req.body.email;
+      password = req.body.password;
+      confirmPassword = req.body.confirmPassword;
+      acceptTerms = req.body.acceptTerms;
+      console.log('FormData request - body keys:', Object.keys(req.body));
+      console.log('File info:', req.file ? { filename: req.file.filename, size: req.file.size } : 'No file');
+    } else {
+      // JSON request
+      ({ fullName, email, password, confirmPassword, acceptTerms } = req.body);
+      console.log('JSON request - body keys:', Object.keys(req.body));
+    }
+    
     console.log('Extracted data:', { fullName, email, password: '***', confirmPassword: '***', acceptTerms });
 
     // Validate required fields
