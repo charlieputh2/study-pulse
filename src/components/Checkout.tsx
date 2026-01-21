@@ -427,10 +427,19 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       await Swal.fire({
         icon: 'success',
         title: 'Payment Step',
-        text: 'Please select your payment method and upload proof of payment.',
-        timer: 2000,
-        timerProgressBar: true,
+        html: `
+          <div style="text-align: center; font-family: system-ui;">
+            <p style="margin-bottom: 16px; color: #374151;">Please select your payment method and upload proof of payment.</p>
+            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Select Payment Method</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Upload Payment Proof</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Choose Contact Method</p>
+            </div>
+            <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">Ready when you are! Complete your order below.</p>
+          </div>
+        `,
         confirmButtonColor: '#1e40af',
+        confirmButtonText: 'Got it!',
         backdrop: 'rgba(0,0,0,0.5)',
         showClass: {
           popup: 'animate__animated animate__fadeInDown'
@@ -445,6 +454,15 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
 
   
   const handlePlaceOrder = async () => {
+    console.log('🚀 Place Order clicked');
+    console.log('📊 Form validation:', {
+      isLoggedIn,
+      selectedPaymentMethod,
+      paymentProof: paymentProof ? paymentProof.name : 'none',
+      contactMethod,
+      isUploadingProof
+    });
+    
     // First check if user is logged in
     if (!isLoggedIn) {
       const result = await Swal.fire({
@@ -1768,7 +1786,7 @@ Please confirm this order. Thank you!
                   disabled={!selectedPaymentMethod || !paymentProof || !contactMethod || isUploadingProof}
                   className={`w-full py-5 sm:py-6 rounded-2xl font-bold text-lg sm:text-xl transition-all duration-300 transform shadow-xl relative overflow-hidden group ${
                     selectedPaymentMethod && paymentProof && contactMethod && !isUploadingProof
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-2xl hover:scale-105 border-2 border-green-600'
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white hover:shadow-2xl hover:scale-105 border-2 border-green-600 cursor-pointer'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed border-2 border-gray-300'
                   }`}
                 >
