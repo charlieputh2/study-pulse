@@ -20,7 +20,12 @@ class UserProfileService {
     try {
       console.log('Creating user profile in Supabase:', userData);
       
-      const { data, error } = await this.supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Supabase connection timeout')), 10000)
+      );
+      
+      const supabasePromise = this.supabase
         .from('user_profiles')
         .insert([
           {
@@ -31,6 +36,8 @@ class UserProfileService {
           }
         ])
         .select();
+
+      const { data, error } = await Promise.race([supabasePromise, timeoutPromise]);
 
       if (error) {
         console.error('Supabase error:', error);

@@ -344,13 +344,20 @@ const emailService = {
   // Send welcome email after registration
   async sendWelcomeEmail(userEmail, userName) {
     try {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email sending timeout')), 10000)
+      );
+      
       const mailOptions = {
         from: 'Study Pulse <studypulse2022@gmail.com>',
         to: userEmail,
         ...emailTemplates.welcome(userEmail, userName)
       };
 
-      await transporter.sendMail(mailOptions);
+      const sendPromise = transporter.sendMail(mailOptions);
+      await Promise.race([sendPromise, timeoutPromise]);
+      
       console.log('Welcome email sent successfully to:', userEmail);
       return { success: true, message: 'Welcome email sent successfully' };
     } catch (error) {

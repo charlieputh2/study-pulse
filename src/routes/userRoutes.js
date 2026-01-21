@@ -177,7 +177,7 @@ router.post('/register', flexibleBodyParser, async (req, res) => {
       
       // Send optional services asynchronously (don't wait for them)
       // This prevents registration from failing if these services fail
-      setImmediate(async () => {
+      Promise.resolve().then(async () => {
         try {
           // Try to create user profile in Supabase (non-blocking)
           if (userProfileService) {

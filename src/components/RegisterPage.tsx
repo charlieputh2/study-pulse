@@ -172,7 +172,7 @@ const RegisterPage: React.FC = () => {
       while (retryCount <= maxRetries) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
           
           // Use Render backend for production, localhost for development
           const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
