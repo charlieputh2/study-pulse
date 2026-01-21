@@ -1163,7 +1163,13 @@ Please confirm this order. Thank you!
                     name="paymentType"
                     value="cod"
                     checked={paymentType === 'cod'}
-                    onChange={(e) => setPaymentType(e.target.value as any)}
+                    onChange={(e) => {
+                      setPaymentType(e.target.value as any);
+                      // Auto-select LBC when COD is chosen
+                      if (e.target.value === 'cod' && selectedCourier !== 'LBC') {
+                        setSelectedCourier('LBC');
+                      }
+                    }}
                     className="sr-only"
                   />
                   <div className="text-center">
@@ -1237,6 +1243,10 @@ Please confirm this order. Thank you!
                           selectedCourier === courier.value
                             ? 'border-blue-500 bg-blue-50 shadow-md'
                             : 'border-gray-200 hover:border-gray-300 bg-white'
+                        } ${
+                          paymentType === 'cod' && courier.value !== 'LBC'
+                            ? 'opacity-50 cursor-not-allowed'
+                            : ''
                         }`}
                       >
                         <input
@@ -1245,11 +1255,15 @@ Please confirm this order. Thank you!
                           value={courier.value}
                           checked={selectedCourier === courier.value}
                           onChange={(e) => setSelectedCourier(e.target.value as any)}
+                          disabled={paymentType === 'cod' && courier.value !== 'LBC'}
                           className="sr-only"
                         />
                         <div className="text-center">
                           <div className="font-semibold text-gray-900">{courier.label}</div>
                           <div className="text-xs text-gray-600 mt-1">{courier.desc}</div>
+                          {paymentType === 'cod' && courier.value !== 'LBC' && (
+                            <div className="text-xs text-red-500 font-medium mt-2">Only available for Pay First</div>
+                          )}
                         </div>
                       </label>
                     ))}
