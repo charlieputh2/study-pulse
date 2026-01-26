@@ -551,6 +551,33 @@ html {
     font-size: 0.875rem;
     line-height: 1.5;
   }
+  
+  /* Terms Modal Mobile Optimizations */
+  .fixed.inset-0.z-50 {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  
+  /* Better touch targets for mobile */
+  button.min-h-\[44px\] {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent zoom on iOS */
+  input, textarea, select {
+    font-size: 16px;
+  }
+  
+  /* Modal viewport fixes */
+  .max-h-\[95vh\] {
+    max-height: 95vh;
+    max-height: 95dvh; /* Dynamic viewport height */
+  }
+  
+  .max-h-\[calc\(95vh-180px\)\] {
+    max-height: calc(95vh - 180px);
+    max-height: calc(95dvh - 180px);
+  }
 }
 
 /* Performance Optimizations */

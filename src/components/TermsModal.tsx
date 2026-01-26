@@ -12,7 +12,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
+      <div className="flex min-h-screen items-center justify-center p-2 sm:p-4 lg:p-6">
         {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -20,33 +20,33 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
         />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in my-4">
+        <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden animate-scale-in my-2 sm:my-4">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Shield className="w-8 h-8" />
-                <h2 className="text-xl sm:text-2xl font-bold">Terms and Conditions</h2>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8" />
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold">Terms and Conditions</h2>
               </div>
               <button
                 onClick={onDecline}
-                className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+                className="text-white/80 hover:text-white transition-colors p-2 sm:p-1 rounded-lg hover:bg-white/10"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-            <div className="space-y-4 sm:space-y-6 text-gray-700">
+          <div className="p-3 sm:p-4 lg:p-6 overflow-y-auto max-h-[calc(95vh-180px)] sm:max-h-[calc(90vh-200px)]">
+            <div className="space-y-3 sm:space-y-4 lg:space-y-6 text-gray-700">
               {/* Important Notice */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+                <div className="flex gap-2 sm:gap-3">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-semibold text-yellow-800 mb-1">Important Notice</h3>
-                    <p className="text-sm text-yellow-700">
+                    <h3 className="font-semibold text-yellow-800 mb-1 text-sm sm:text-base">Important Notice</h3>
+                    <p className="text-xs sm:text-sm text-yellow-700">
                       This is a research peptide intended for scientific and laboratory research purposes only. 
                       Not for human consumption.
                     </p>
@@ -56,11 +56,11 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
 
               {/* Terms Sections */}
               <section>
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center gap-2">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   Eligibility and Use
                 </h3>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                   <li className="flex items-start gap-2">
                     <span className="text-blue-600 mt-1">•</span>
                     <span>I am at least 18 years of age or older</span>
@@ -81,11 +81,11 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   Product Handling and Safety
                 </h3>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 mt-1">•</span>
                     <span>I will follow proper safety protocols and handling procedures</span>
@@ -102,8 +102,8 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">Legal Disclaimer</h3>
-                <div className="bg-gray-50 rounded-lg p-4 text-sm">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Legal Disclaimer</h3>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4 text-xs sm:text-sm">
                   <p className="mb-2">
                     The information provided on this website is for educational and research purposes only. 
                     Tirzepatide and other research peptides are experimental compounds that have not been 
@@ -122,8 +122,8 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
               </section>
 
               <section>
-                <h3 className="text-lg font-semibold mb-3">Privacy Policy</h3>
-                <p className="text-sm">
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Privacy Policy</h3>
+                <p className="text-xs sm:text-sm">
                   We respect your privacy and are committed to protecting your personal information. 
                   All data is handled in accordance with applicable privacy laws and regulations.
                 </p>
@@ -132,22 +132,22 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
           </div>
 
           {/* Footer Actions */}
-          <div className="border-t border-gray-200 p-6 bg-gray-50">
-            <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="border-t border-gray-200 p-4 sm:p-6 bg-gray-50">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <button
                 onClick={onDecline}
-                className="w-full sm:w-auto px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors min-h-[48px] flex items-center justify-center"
+                className="w-full px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors min-h-[44px] sm:min-h-[48px] flex items-center justify-center text-sm sm:text-base"
               >
                 Decline
               </button>
               <button
                 onClick={onAccept}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl min-h-[48px] flex items-center justify-center"
+                className="w-full px-4 sm:px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl min-h-[44px] sm:min-h-[48px] flex items-center justify-center text-sm sm:text-base"
               >
                 I Agree and Accept Terms
               </button>
             </div>
-            <p className="text-xs text-gray-500 text-center mt-4 px-2">
+            <p className="text-xs text-gray-500 text-center mt-3 sm:mt-4 px-2 leading-relaxed">
               You must accept these terms to proceed. By accepting, you confirm that you have read, 
               understood, and agree to be bound by these terms and conditions.
             </p>
