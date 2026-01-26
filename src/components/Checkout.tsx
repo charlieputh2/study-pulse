@@ -5,7 +5,6 @@ import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useShippingLocations } from '../hooks/useShippingLocations';
 import { useAuth } from '../hooks/useAuth';
 import { useOrders } from '../hooks/useOrders';
-import { supabase } from '../lib/supabase';
 import { useImageUpload } from '../hooks/useImageUpload';
 import type { CartItem } from '../types';
 
@@ -18,7 +17,7 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): React.ReactNode => {
   const { paymentMethods, loading: paymentLoading } = usePaymentMethods();
   const { locations: shippingLocations, getShippingFee } = useShippingLocations();
-  const { user, login, register, loading: authLoading } = useAuth();
+  const { user, login, register } = useAuth();
   const { createOrder } = useOrders();
   const [step, setStep] = useState<'details' | 'payment' | 'confirmation'>('details');
 
@@ -226,7 +225,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       setShowLoginModal(false);
       
       // Show success message with proper closing
-      const successResult = await Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: 'Welcome Back!',
         html: `
@@ -295,7 +294,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       setShowLoginModal(false);
       
       // Show success message with proper closing
-      const successResult = await Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: 'Account Created!',
         html: `
@@ -472,7 +471,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       setStep('payment');
       
       // Show loading while checking payment methods
-      const loadingSwal = await Swal.fire({
+      await Swal.fire({
         title: 'Loading Payment Methods...',
         text: 'Please wait while we load available payment options.',
         allowOutsideClick: false,
@@ -697,11 +696,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
   option_id: item.option?.id,
   quantity: item.quantity,
   price: item.price,
-  product_name: item.product?.name || item.name,
+  product_name: item.product?.name,
   variation_name: item.variation?.name,
-  variation_value: item.variation?.value,
   option_name: item.option?.name,
-  option_value: item.option?.value,
   purity_percentage: item.product?.purity_percentage
 }));
 
@@ -744,8 +741,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
 
         // Send order confirmation email
         try {
-          const emailService = (await import('../services/emailService')).default;
-          await emailService.sendOrderConfirmation(email, {
+          // @ts-ignore
+          const emailService = require('../services/emailService');
+          await emailService.default.sendOrderConfirmation(email, {
             ...result.data,
             order_items: orderItems
           });
@@ -782,7 +780,7 @@ ${city}, ${state} ${zipCode}
 
 ORDER DETAILS
 ${cartItems.map((item: CartItem) => {
-          let line = `• ${item.product?.name || item.name}`;
+          let line = `• ${item.product?.name}`;
           if (item.variation) {
             line += ` (${item.variation.name})`;
           }
@@ -816,7 +814,7 @@ ${paymentProofUrl ? 'Screenshot attached to order.' : 'Pending'}
 CONTACT METHOD
 Messenger: https://m.me/StudyPulse
 
-ORDER ID: ${orderData.id}
+ORDER ID: ${result.data.id}
 
 Please confirm this order. Thank you!
       `.trim();
@@ -860,7 +858,7 @@ Please confirm this order. Thank you!
             <div style="text-align: left; font-family: system-ui;">
               <p style="margin-bottom: 12px; color: #374151;">Your order has been placed successfully!</p>
               <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #10b981;">
-                <p style="margin: 4px 0; font-weight: 600; color: #059669;">Order ID: ${orderData.id}</p>
+                <p style="margin: 4px 0; font-weight: 600; color: #059669;">Order ID: ${result.data.id}</p>
                 <p style="margin: 4px 0; color: #059669;">Total: ₱${finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</p>
                 <p style="margin: 4px 0; color: #6b7280;">Courier: ${selectedCourier}</p>
               </div>
@@ -1382,7 +1380,7 @@ Please confirm this order. Thank you!
                     <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{item.product?.name || item.name}</p>
+                      <p className="font-medium text-gray-900 truncate">{item.product?.name}</p>
                       {item.variation && (
                         <p className="text-sm text-gray-500">{item.variation.name}</p>
                       )}
@@ -1929,7 +1927,7 @@ Please confirm this order. Thank you!
                       <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{item.product?.name || item.name}</p>
+                        <p className="font-medium text-gray-900 truncate">{item.product?.name}</p>
                         {item.variation && (
                           <p className="text-sm text-gray-500">{item.variation.name}</p>
                         )}
@@ -2675,7 +2673,7 @@ Please confirm this order. Thank you!
                     <div key={index} className="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 shadow-sm">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{item.product?.name || item.name}</h4>
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{item.product?.name}</h4>
                           {item.variation && (
                             <p className="text-xs sm:text-sm text-gray-600 mt-1">{item.variation.name}</p>
                           )}
