@@ -3,6 +3,8 @@ import { ArrowLeft, CreditCard, Navigation, Upload, Check, XCircle, MapPin, Pack
 import Swal from 'sweetalert2';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
 import { useShippingLocations } from '../hooks/useShippingLocations';
+import { useAuth } from '../hooks/useAuth';
+import { useOrders } from '../hooks/useOrders';
 import { supabase } from '../lib/supabase';
 import { useImageUpload } from '../hooks/useImageUpload';
 
@@ -41,6 +43,8 @@ interface CheckoutProps {
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): React.ReactNode => {
   const { paymentMethods } = usePaymentMethods();
   const { locations: shippingLocations, getShippingFee } = useShippingLocations();
+  const { user, login, register, loading: authLoading } = useAuth();
+  const { createOrder } = useOrders();
   const [step, setStep] = useState<'details' | 'payment' | 'confirmation'>('details');
 
   // Customer Details
@@ -77,6 +81,27 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Update user data when auth state changes
+  React.useEffect(() => {
+    if (user) {
+      setIsLoggedIn(true);
+      setUserEmail(user.email);
+      setUserPhone(user.phone || '');
+      setUserFullName(user.full_name || '');
+      setFullName(user.full_name || '');
+      setEmail(user.email);
+      setPhone(user.phone || '');
+    } else {
+      setIsLoggedIn(false);
+      setUserEmail('');
+      setUserPhone('');
+      setUserFullName('');
+      setFullName('');
+      setEmail('');
+      setPhone('');
+    }
+  }, [user]);
 
   // Payment
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(''); // Initialize as empty string
@@ -161,17 +186,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
   React.useEffect(() => {
     // Check if user is logged in (check localStorage or session)
     const savedUser = localStorage.getItem('studyPulseUser');
-    if (savedUser) {
-      const user = JSON.parse(savedUser);
-      setIsLoggedIn(true);
-      setUserEmail(user.email);
-      setUserPhone(user.phone);
-      setUserFullName(user.fullName);
-      setFullName(user.fullName);
-      setEmail(user.email);
-      setPhone(user.phone);
+    if (savedUser && !user) {
+      const userData = JSON.parse(savedUser);
+      setFullName(userData.fullName);
+      setEmail(userData.email);
+      setPhone(userData.phone);
     }
-  }, []);
+  }, [user]);
 
   const handleLogout = async () => {
     const result = await Swal.fire({
@@ -205,7 +226,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     }
   };
 
-
   // Authentication handlers
   const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
@@ -221,33 +241,17 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     setIsAuthenticating(true);
 
     try {
-      // Simulate login - replace with actual authentication
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await login(loginEmail, loginPassword);
       
-      // Save user data to localStorage for persistence
-      const userData = {
-        fullName: registerName || loginEmail.split('@')[0],
-        email: loginEmail,
-        phone: registerPhone || '09XXXXXXXXX'
-      };
-      localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
-      // Auto-populate form with user data
-      setFullName(registerName || loginEmail.split('@')[0]);
-      setEmail(loginEmail);
-      setPhone(registerPhone || '09XXXXXXXXX');
-      
-      // Set logged in state
-      setIsLoggedIn(true);
-      setUserEmail(loginEmail);
-      setUserPhone(registerPhone || '09XXXXXXXXX');
-      setUserFullName(registerName || loginEmail.split('@')[0]);
-      
-      // Close modal first
+      // Close modal
       setShowLoginModal(false);
       
       // Show success message with proper closing
-      const result = await Swal.fire({
+      const successResult = await Swal.fire({
         icon: 'success',
         title: 'Welcome Back!',
         html: `
@@ -276,7 +280,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       await Swal.fire({
         icon: 'error',
         title: 'Login Failed',
-        text: 'Invalid email or password. Please try again.',
+        text: error instanceof Error ? error.message : 'Invalid email or password. Please try again.',
         confirmButtonColor: '#ef4444'
       });
     } finally {
@@ -298,8 +302,11 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     setIsAuthenticating(true);
 
     try {
-      // Simulate registration - replace with actual registration
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const result = await register(registerEmail, registerPassword, registerName, registerPhone);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
       // Save user data to localStorage for persistence
       const userData = {
@@ -309,22 +316,11 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       };
       localStorage.setItem('studyPulseUser', JSON.stringify(userData));
       
-      // Auto-populate form with user data
-      setFullName(registerName);
-      setEmail(registerEmail);
-      setPhone(registerPhone);
-      
-      // Set logged in state
-      setIsLoggedIn(true);
-      setUserEmail(registerEmail);
-      setUserPhone(registerPhone);
-      setUserFullName(registerName);
-      
       // Close modal first
       setShowLoginModal(false);
       
       // Show success message with proper closing
-      const result = await Swal.fire({
+      const successResult = await Swal.fire({
         icon: 'success',
         title: 'Account Created!',
         html: `
@@ -353,7 +349,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       await Swal.fire({
         icon: 'error',
         title: 'Registration Failed',
-        text: 'Unable to create account. Please try again.',
+        text: error instanceof Error ? error.message : 'Unable to create account. Please try again.',
         confirmButtonColor: '#ef4444'
       });
     } finally {
@@ -706,79 +702,54 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
   purity_percentage: item.product?.purity_percentage
 }));
 
-        // Save order to database
-        const { data: orderData, error: orderError } = await supabase
-          .from('orders')
-          .insert([{
-            customer_name: fullName,
-            customer_email: email,
-            customer_phone: phone,
-            shipping_address: address,
-            shipping_barangay: barangay,
-            shipping_city: city,
-            shipping_state: state,
-            shipping_zip_code: zipCode,
-            order_items: orderItems,
-            total_price: Math.max(0, totalPrice - discountAmount), // Store subtotal minus discount (not including shipping)
-            shipping_fee: shippingFee,
-            shipping_location: shippingLocation,
-            courier: selectedCourier,
-            is_cod: isCOD,
-            courier_fee: courierFee,
-            payment_method_id: paymentMethod?.id || null,
-            payment_method_name: paymentMethod?.name || null,
-            payment_proof_url: paymentProofUrl,
-            contact_method: contactMethod || null,
-            notes: notes.trim() || null,
-            order_status: 'new',
-            payment_status: 'pending',
-            promo_code_id: appliedPromo?.id || null,
-            promo_code: appliedPromo?.code || null,
-            discount_applied: discountAmount
-          }])
-          .select()
-          .single();
+        // Create order using the useOrders hook
+        const orderData = {
+          customer_name: fullName,
+          customer_email: email,
+          customer_phone: phone,
+          shipping_address: address,
+          shipping_barangay: barangay,
+          shipping_city: city,
+          shipping_state: state,
+          shipping_zip_code: zipCode,
+          order_items: orderItems,
+          total_price: Math.max(0, totalPrice - discountAmount), // Store subtotal minus discount (not including shipping)
+          shipping_fee: shippingFee,
+          shipping_location: shippingLocation,
+          courier: selectedCourier,
+          is_cod: isCOD,
+          courier_fee: courierFee,
+          payment_method_id: paymentMethod?.id || null,
+          payment_method_name: paymentMethod?.name || null,
+          payment_proof_url: paymentProofUrl,
+          contact_method: contactMethod || null,
+          notes: notes.trim() || null,
+          order_status: 'new',
+          payment_status: 'pending',
+          promo_code_id: null,
+          promo_code: null,
+          discount_applied: discountAmount
+        };
 
-        if (orderError) {
-          console.error('❌ Error saving order:', orderError);
+        const result = await createOrder(orderData);
 
-          // Provide helpful error message if table doesn't exist
-          let errorMessage = orderError.message;
-          if (orderError.message?.includes('Could not find the table') ||
-            orderError.message?.includes('relation "public.orders" does not exist') ||
-            orderError.message?.includes('schema cache')) {
-            errorMessage = `The orders table doesn't exist in the database. Please run the migration: supabase/migrations/20250117000000_ensure_orders_table.sql in your Supabase SQL Editor.`;
-          }
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to create order');
+        }
 
-          await Swal.fire({
-            icon: 'error',
-            title: 'Failed to Save Order',
-            text: `Failed to save order: ${errorMessage}`,
-            confirmButtonColor: '#1e40af',
-            backdrop: 'rgba(0,0,0,0.5)',
-            showClass: {
-              popup: 'animate__animated animate__fadeInDown'
-            },
-            hideClass: {
-              popup: 'animate__animated animate__fadeOutUp'
-            }
+        console.log('✅ Order created successfully:', result.data);
+
+        // Send order confirmation email
+        try {
+          const emailService = (await import('../services/emailService')).default;
+          await emailService.sendOrderConfirmation(email, {
+            ...result.data,
+            order_items: orderItems
           });
-          return;
+          console.log('✅ Order confirmation email sent');
+        } catch (emailError) {
+          console.error('Failed to send order confirmation email:', emailError);
         }
-
-        // Update promo code usage count
-        if (appliedPromo) {
-          const { error: promoUpdateError } = await supabase
-            .from('promo_codes')
-            .update({ usage_count: appliedPromo.usage_count + 1 })
-            .eq('id', appliedPromo.id);
-
-          if (promoUpdateError) {
-            console.error('Failed to update promo usage count:', promoUpdateError);
-          }
-        }
-
-        console.log('✅ Order saved to database:', orderData);
 
         // Get current date and time
         const now = new Date();

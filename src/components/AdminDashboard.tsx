@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, Fol
 import type { Product } from '../types';
 import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
+import { useAuth } from '../hooks/useAuth';
+import { useOrders } from '../hooks/useOrders';
 import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
@@ -22,8 +24,10 @@ import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
 import AdminDashboardCards from './AdminDashboardCards';
 const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const { orders } = useOrders();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('peptide_admin_auth') === 'true';
+    return localStorage.getItem('peptide_admin_auth') === 'true' || (user?.email === 'admin@studypulse.com');
   });
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');

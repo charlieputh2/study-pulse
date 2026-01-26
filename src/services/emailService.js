@@ -49,11 +49,9 @@ const emailTemplates = {
           </div>
           
           <div class="content">
-            <h2 class="welcome-title">Welcome to Study Pulse, ${userName}! 🎉</h2>
+            <h2 class="welcome-title">Welcome to Study Pulse, ${userName}! </h2>
             <p class="welcome-text">
-              Thank you for joining Study Pulse! Your account has been successfully created. 
-              You now have access to premium research compounds, peptides, and scientific supplies 
-              with worldwide delivery.
+              Thank you for joining Study Pulse! Your account has been successfully created and you're now ready to explore our premium products and services.
             </p>
             
             <div class="features">
@@ -429,6 +427,27 @@ const emailService = {
   isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  },
+
+  async sendOrderConfirmation(userEmail, orderData) {
+    try {
+      const mailOptions = {
+        from: 'Study Pulse <studypulse2022@gmail.com>',
+        to: userEmail,
+        ...emailTemplates.orderConfirmation(orderData)
+      };
+
+      const sendPromise = transporter.sendMail(mailOptions);
+      await Promise.race([sendPromise, new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email sending timeout')), 10000)
+      )]);
+      
+      console.log('Order confirmation email sent successfully to:', userEmail);
+      return { success: true, message: 'Order confirmation email sent successfully' };
+    } catch (error) {
+      console.error('Error sending order confirmation email:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 

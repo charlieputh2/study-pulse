@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useSearchParams, Link } from 'react-router-dom';
 import { useCart } from './hooks/useCart';
+import { AuthProvider } from './hooks/useAuth';
 import UniqueHeader from './components/UniqueHeader';
 import Menu from './components/Menu';
 import Cart from './components/Cart';
@@ -123,30 +124,30 @@ function App() {
   //   const { coaPageEnabled } = useCOAPageSetting();
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<TirzepatideLanding />} />
-        <Route path="/home" element={<MainApp />} />
-        <Route path="/shop" element={<MainApp />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/dashboard" element={<UserDashboardComplete />} />
-        <Route path="/coa" element={<COA />} />
-        <Route path="/faq" element={<FAQ />} />
-        <Route path="/calculator" element={<PeptideCalculator />} />
-        <Route path="/order-tracking" element={<OrderTrackingPage />} />
-        <Route path="/tracking" element={<OrderTrackingPage />} />
-        <Route path="/smart-guide" element={<SmartGuide />} />
-        <Route path="/articles/:id" element={<ArticleDetail />} />
-        <Route path="/test-connection" element={<TestConnection />} />
-        <Route path="/research" element={<Research />} />
-        <Route path="/protocols" element={<Protocols />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/tirzepatide" element={<TirzepatideLanding />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainApp />} />
+          <Route path="/shop" element={<MainApp />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/user-dashboard" element={<UserDashboardComplete />} />
+          <Route path="/coa" element={<COA />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/calculator" element={<PeptideCalculator />} />
+          <Route path="/track-order" element={<OrderTrackingPage />} />
+          <Route path="/smart-guide" element={<SmartGuide />} />
+          <Route path="/articles/:id" element={<ArticleDetail />} />
+          <Route path="/test-connection" element={<TestConnection />} />
+          <Route path="/research" element={<Research />} />
+          <Route path="/protocols" element={<Protocols />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/tirzepatide" element={<TirzepatideLanding />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
