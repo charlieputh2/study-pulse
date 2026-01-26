@@ -16,7 +16,7 @@ interface CheckoutProps {
 }
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): React.ReactNode => {
-  const { paymentMethods } = usePaymentMethods();
+  const { paymentMethods, loading: paymentLoading } = usePaymentMethods();
   const { locations: shippingLocations, getShippingFee } = useShippingLocations();
   const { user, login, register, loading: authLoading } = useAuth();
   const { createOrder } = useOrders();
@@ -471,26 +471,41 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
         }
       });
       
-      // Wait a moment for payment methods to load
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for payment methods to load with timeout
+      let attempts = 0;
+      const maxAttempts = 10; // 10 seconds max wait
+      
+      while (paymentLoading && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      }
       
       // Check if payment methods are available
       if (paymentMethods.length === 0) {
         await Swal.close();
-        await Swal.fire({
+        
+        // Try to provide a fallback option
+        const fallbackResult = await Swal.fire({
           icon: 'warning',
-          title: 'No Payment Methods Available',
+          title: 'Payment Methods Unavailable',
           html: `
             <div style="text-align: center; font-family: system-ui;">
-              <p style="margin: 12px 0; color: #374151;">No payment methods are currently available.</p>
-              <p style="margin: 12px 0; color: #6b7280;">Please contact support or try again later.</p>
+              <p style="margin: 12px 0; color: #374151;">Unable to load payment methods from database.</p>
+              <p style="margin: 12px 0; color: #6b7280;">You can still proceed with manual payment instructions.</p>
             </div>
           `,
+          showCancelButton: true,
+          confirmButtonText: 'Proceed Anyway',
+          cancelButtonText: 'Go Back',
           confirmButtonColor: '#1e40af',
+          cancelButtonColor: '#6b7280',
           backdrop: 'rgba(0,0,0,0.5)'
         });
-        setStep('details'); // Go back to details
-        return;
+        
+        if (!fallbackResult.isConfirmed) {
+          setStep('details'); // Go back to details
+          return;
+        }
       }
       
       await Swal.close();
@@ -1705,10 +1720,16 @@ Please confirm this order. Thank you!
                 </div>
 
                 <div className="space-y-4">
-                  {paymentMethods.length === 0 ? (
+                  {paymentLoading ? (
                     <div className="text-center py-8">
                       <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500">Loading payment methods...</p>
+                    </div>
+                  ) : paymentMethods.length === 0 ? (
+                    <div className="text-center py-8">
+                      <XCircle className="w-8 h-8 text-red-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No payment methods available</p>
+                      <p className="text-sm text-gray-400 mt-2">Please contact support for assistance</p>
                     </div>
                   ) : (
                     paymentMethods.map((method) => (

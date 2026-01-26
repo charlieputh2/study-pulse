@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, RefreshCw, Layers, BookOpen, BarChart3, Calendar } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, RefreshCw, Layers } from 'lucide-react';
 import type { Product } from '../types';
 import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
@@ -24,7 +24,7 @@ import AdminHeader from './AdminHeader';
 import AdminDashboardCards from './AdminDashboardCards';
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { orders } = useOrders();
+  const { } = useOrders();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('peptide_admin_auth') === 'true' || (user?.email === 'admin@studypulse.com');
   });
@@ -38,7 +38,6 @@ const AdminDashboard: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [loginLoading, setLoginLoading] = useState(false);
   const [managingVariationsProductId, setManagingVariationsProductId] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -195,13 +194,17 @@ const AdminDashboard: React.FC = () => {
       ...product,
       enable_options: !!product.options && product.options.length > 0,
       options: product.options?.map(option => ({
+        id: option.id,
+        product_id: option.product_id,
         name: option.name,
-        description: option.description || undefined,
+        description: option.description || null,
         price_adjustment: option.price_adjustment,
         final_price: option.final_price,
         stock_quantity: option.stock_quantity,
         available: option.available,
-        sort_order: option.sort_order
+        sort_order: option.sort_order,
+        created_at: option.created_at,
+        updated_at: option.updated_at
       }))
     };
     setFormData(transformedData);
@@ -534,10 +537,6 @@ const AdminDashboard: React.FC = () => {
   const totalProducts = products.length;
   const featuredProducts = products.filter(p => p.featured).length;
   const availableProducts = products.filter(p => p.available).length;
-  const categoryCounts = categories.map(cat => ({
-    ...cat,
-    count: products.filter(p => p.category === cat.id).length
-  }));
 
   const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@studypulse.com';
   const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@123';
@@ -545,7 +544,6 @@ const AdminDashboard: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    setLoginLoading(true);
     try {
       // Offline/fallback login without hitting Supabase (avoids 400s)
       if (password === ADMIN_PASSWORD) {
@@ -571,8 +569,6 @@ const AdminDashboard: React.FC = () => {
     } catch (err) {
       console.error('Admin login failed:', err);
       setLoginError('Unable to sign in. Please try again.');
-    } finally {
-      setLoginLoading(false);
     }
   };
 
@@ -1012,31 +1008,43 @@ const AdminDashboard: React.FC = () => {
                             enable_options: true,
                             options: [
                               {
+                                id: `temp-${Date.now()}-1`,
+                                product_id: editingProduct?.id || 'temp-product',
                                 name: 'Complete Set',
                                 description: 'Everything you need: vial, bac water, syringes, alcohol pads, and instructions',
                                 price_adjustment: 50,
                                 final_price: null,
                                 stock_quantity: 50,
                                 available: true,
-                                sort_order: 1
+                                sort_order: 1,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
                               },
                               {
+                                id: `temp-${Date.now()}-2`,
+                                product_id: editingProduct?.id || 'temp-product',
                                 name: 'Vial Only',
                                 description: 'Just the peptide vial',
                                 price_adjustment: 0,
                                 final_price: null,
                                 stock_quantity: 100,
                                 available: true,
-                                sort_order: 2
+                                sort_order: 2,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
                               },
                               {
+                                id: `temp-${Date.now()}-3`,
+                                product_id: editingProduct?.id || 'temp-product',
                                 name: 'Starter Kit',
                                 description: 'Vial + bac water + syringes',
                                 price_adjustment: 25,
                                 final_price: null,
                                 stock_quantity: 75,
                                 available: true,
-                                sort_order: 3
+                                sort_order: 3,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
                               }
                             ]
                           });
@@ -1173,13 +1181,17 @@ const AdminDashboard: React.FC = () => {
                       onClick={() => {
                         const newOptions = [...(formData.options || [])];
                         newOptions.push({
+                          id: `temp-${Date.now()}-${newOptions.length + 1}`,
+                          product_id: editingProduct?.id || 'temp-product',
                           name: '',
                           description: '',
                           price_adjustment: 0,
                           final_price: null,
                           stock_quantity: 0,
                           available: true,
-                          sort_order: (formData.options?.length || 0) + 1
+                          sort_order: (formData.options?.length || 0) + 1,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString()
                         });
                         setFormData({ ...formData, options: newOptions });
                       }}
