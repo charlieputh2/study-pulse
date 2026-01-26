@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, TrendingUp, Package, Users, FolderOpen, CreditCard, Sparkles, Layers, Shield, RefreshCw, Warehouse, ShoppingCart, HelpCircle, MapPin, Settings, Tag, BookOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, RefreshCw, Layers, BookOpen, BarChart3, Calendar } from 'lucide-react';
 import type { Product } from '../types';
 import { useMenu } from '../hooks/useMenu';
 import { useCategories } from '../hooks/useCategories';
@@ -18,7 +18,6 @@ import UniqueSiteSettingsManager from './UniqueSiteSettingsManager';
 import PromoCodeManager from './PromoCodeManager';
 import GuideManager from './GuideManager';
 import SalesAnalyticsManager from './SalesAnalyticsManager';
-import { Calendar, BarChart3 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
@@ -132,12 +131,16 @@ const AdminDashboard: React.FC = () => {
     enable_options?: boolean; 
     options?: Array<{
       name: string;
-      description?: string;
+      description?: string | null;
       price_adjustment: number;
       final_price?: number | null;
       stock_quantity: number;
       available: boolean;
       sort_order: number;
+      id?: string;
+      product_id?: string;
+      created_at?: string;
+      updated_at?: string;
     }>;
   }>>({
     name: '',
@@ -187,7 +190,21 @@ const AdminDashboard: React.FC = () => {
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setFormData(product);
+    // Transform product data to match formData structure
+    const transformedData = {
+      ...product,
+      enable_options: !!product.options && product.options.length > 0,
+      options: product.options?.map(option => ({
+        name: option.name,
+        description: option.description || undefined,
+        price_adjustment: option.price_adjustment,
+        final_price: option.final_price,
+        stock_quantity: option.stock_quantity,
+        available: option.available,
+        sort_order: option.sort_order
+      }))
+    };
+    setFormData(transformedData);
     setCurrentView('edit');
     setSelectedProducts(new Set());
     setManagingVariationsProductId(null);
@@ -1004,20 +1021,20 @@ const AdminDashboard: React.FC = () => {
                                 sort_order: 1
                               },
                               {
-                                name: 'Vial + Bac Water Only',
-                                description: 'Just the essentials: peptide vial and bacteriostatic water',
-                                price_adjustment: 15,
+                                name: 'Vial Only',
+                                description: 'Just the peptide vial',
+                                price_adjustment: 0,
                                 final_price: null,
-                                stock_quantity: 75,
+                                stock_quantity: 100,
                                 available: true,
                                 sort_order: 2
                               },
                               {
-                                name: 'Vial Only',
-                                description: 'Peptide vial only - perfect if you already have supplies',
-                                price_adjustment: 0,
+                                name: 'Starter Kit',
+                                description: 'Vial + bac water + syringes',
+                                price_adjustment: 25,
                                 final_price: null,
-                                stock_quantity: 100,
+                                stock_quantity: 75,
                                 available: true,
                                 sort_order: 3
                               }

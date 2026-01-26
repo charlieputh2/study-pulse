@@ -7,32 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useOrders } from '../hooks/useOrders';
 import { supabase } from '../lib/supabase';
 import { useImageUpload } from '../hooks/useImageUpload';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  product?: {
-    id: string;
-    name: string;
-    image?: string;
-    purity_percentage?: number;
-  };
-  variation?: {
-    id: string;
-    name: string;
-    value: string;
-    description?: string;
-  };
-  option?: {
-    id: string;
-    name: string;
-    value: string;
-    description?: string;
-  };
-}
+import type { CartItem } from '../types';
 
 interface CheckoutProps {
   cartItems: CartItem[];
