@@ -130,7 +130,11 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     if (paymentMethods.length > 0 && !selectedPaymentMethod) {
       setSelectedPaymentMethod(paymentMethods[0].id);
     }
-  }, [paymentMethods, selectedPaymentMethod]);
+    // Auto-select first payment method when they load
+    if (paymentMethods.length > 0 && step === 'payment' && !selectedPaymentMethod) {
+      setSelectedPaymentMethod(paymentMethods[0].id);
+    }
+  }, [paymentMethods, selectedPaymentMethod, step]);
 
   // Calculate shipping fee based on location (uses dynamic fees from database)
   const shippingFee = shippingLocation ? getShippingFee(shippingLocation) : 0;
@@ -321,6 +325,15 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     selectedCourier !== '';
 
   const handleProceedToPayment = async () => {
+    console.log('🚀 Proceeding to payment...');
+    console.log('📊 Form validation:', {
+      isDetailsValid,
+      paymentType,
+      selectedCourier,
+      isLoggedIn,
+      paymentMethodsCount: paymentMethods.length
+    });
+    
     if (!isDetailsValid) {
       await Swal.fire({
         icon: 'warning',
@@ -421,7 +434,45 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
     });
     
     if (result.isConfirmed) {
+      // Set payment step immediately
       setStep('payment');
+      
+      // Show loading while checking payment methods
+      const loadingSwal = await Swal.fire({
+        title: 'Loading Payment Methods...',
+        text: 'Please wait while we load available payment options.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      // Wait a moment for payment methods to load
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if payment methods are available
+      if (paymentMethods.length === 0) {
+        await Swal.close();
+        await Swal.fire({
+          icon: 'warning',
+          title: 'No Payment Methods Available',
+          html: `
+            <div style="text-align: center; font-family: system-ui;">
+              <p style="margin: 12px 0; color: #374151;">No payment methods are currently available.</p>
+              <p style="margin: 12px 0; color: #6b7280;">Please contact support or try again later.</p>
+            </div>
+          `,
+          confirmButtonColor: '#1e40af',
+          backdrop: 'rgba(0,0,0,0.5)'
+        });
+        setStep('details'); // Go back to details
+        return;
+      }
+      
+      await Swal.close();
       
       // Show success notification
       await Swal.fire({
@@ -1658,32 +1709,39 @@ Please confirm this order. Thank you!
                 </div>
 
                 <div className="space-y-4">
-                  {paymentMethods.map((method) => (
-                    <label
-                      key={method.id}
-                      className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md ${
-                        selectedPaymentMethod === method.id
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method.id}
-                        checked={selectedPaymentMethod === method.id}
-                        onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                      />
-                      <div className="ml-4 flex-1">
-                        <div className="font-semibold text-gray-900">{method.name}</div>
-                        <div className="text-sm text-gray-600 mt-1">Account: {method.account_number}</div>
-                        {method.instructions && (
-                          <div className="text-sm text-gray-500 mt-2">{method.instructions}</div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
+                  {paymentMethods.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">Loading payment methods...</p>
+                    </div>
+                  ) : (
+                    paymentMethods.map((method) => (
+                      <label
+                        key={method.id}
+                        className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md ${
+                          selectedPaymentMethod === method.id
+                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                            : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value={method.id}
+                          checked={selectedPaymentMethod === method.id}
+                          onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                          className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <div className="ml-4 flex-1">
+                          <div className="font-semibold text-gray-900">{method.name}</div>
+                          <div className="text-sm text-gray-600 mt-1">Account: {method.account_number}</div>
+                          {method.instructions && (
+                            <div className="text-sm text-gray-500 mt-2">{method.instructions}</div>
+                          )}
+                        </div>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
