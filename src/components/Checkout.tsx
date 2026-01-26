@@ -485,16 +485,18 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       
       // Wait for payment methods to load with timeout
       let attempts = 0;
-      const maxAttempts = 10; // 10 seconds max wait
+      const maxAttempts = 5; // 5 seconds max wait
       
       while (paymentLoading && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         attempts++;
       }
       
+      // Force close loading if stuck
+      await Swal.close();
+      
       // Check if payment methods are available
       if (paymentMethods.length === 0) {
-        await Swal.close();
         
         // Try to provide a fallback option
         const fallbackResult = await Swal.fire({
@@ -519,8 +521,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
           return;
         }
       }
-      
-      await Swal.close();
       
       // Show success notification
       await Swal.fire({
