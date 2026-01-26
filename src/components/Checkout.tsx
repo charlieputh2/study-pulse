@@ -224,6 +224,14 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       // Simulate login - replace with actual authentication
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Save user data to localStorage for persistence
+      const userData = {
+        fullName: registerName || loginEmail.split('@')[0],
+        email: loginEmail,
+        phone: registerPhone || '09XXXXXXXXX'
+      };
+      localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+      
       // Auto-populate form with user data
       setFullName(registerName || loginEmail.split('@')[0]);
       setEmail(loginEmail);
@@ -235,16 +243,33 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       setUserPhone(registerPhone || '09XXXXXXXXX');
       setUserFullName(registerName || loginEmail.split('@')[0]);
       
-      // Close modal
+      // Close modal first
       setShowLoginModal(false);
       
-      // Show success message
-      await Swal.fire({
+      // Show success message with proper closing
+      const result = await Swal.fire({
         icon: 'success',
         title: 'Welcome Back!',
-        text: 'You have been successfully logged in.',
-        timer: 2000,
-        showConfirmButton: false
+        html: `
+          <div style="text-align: center; font-family: system-ui;">
+            <p style="margin-bottom: 16px; color: #374151;">You have been successfully logged in!</p>
+            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Logged In</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Account Loaded</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Ready to Checkout</p>
+            </div>
+            <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">Welcome back to Study Pulse! You can now proceed with your order.</p>
+          </div>
+        `,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Continue',
+        backdrop: 'rgba(0,0,0,0.5)',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        }
       });
 
     } catch (error) {
@@ -276,6 +301,14 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       // Simulate registration - replace with actual registration
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Save user data to localStorage for persistence
+      const userData = {
+        fullName: registerName,
+        email: registerEmail,
+        phone: registerPhone
+      };
+      localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+      
       // Auto-populate form with user data
       setFullName(registerName);
       setEmail(registerEmail);
@@ -287,16 +320,33 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       setUserPhone(registerPhone);
       setUserFullName(registerName);
       
-      // Close modal
+      // Close modal first
       setShowLoginModal(false);
       
-      // Show success message
-      await Swal.fire({
+      // Show success message with proper closing
+      const result = await Swal.fire({
         icon: 'success',
         title: 'Account Created!',
-        text: 'Your account has been created successfully. Welcome to Study Pulse!',
-        timer: 3000,
-        showConfirmButton: false
+        html: `
+          <div style="text-align: center; font-family: system-ui;">
+            <p style="margin-bottom: 16px; color: #374151;">Your account has been created successfully!</p>
+            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Account Created</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Logged In</p>
+              <p style="margin: 4px 0; color: #059669; font-weight: 600;">✓ Ready to Checkout</p>
+            </div>
+            <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">Welcome to Study Pulse! You can now proceed with your order.</p>
+          </div>
+        `,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Continue',
+        backdrop: 'rgba(0,0,0,0.5)',
+        showClass: {
+          popup: 'animate__animated animate__fadeInDown'
+        },
+        hideClass: {
+          popup: 'animate__animated animate__fadeOutUp'
+        }
       });
 
     } catch (error) {
