@@ -147,6 +147,7 @@ function App() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/tirzepatide" element={<TirzepatideLanding />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/dashboard" element={<UserDashboardComplete />} />
         </Routes>
       </Router>
     </AuthProvider>
