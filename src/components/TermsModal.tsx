@@ -12,7 +12,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
         {/* Backdrop */}
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -20,17 +20,17 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
         />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-scale-in my-4">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Shield className="w-8 h-8" />
-                <h2 className="text-2xl font-bold">Terms and Conditions</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">Terms and Conditions</h2>
               </div>
               <button
                 onClick={onDecline}
-                className="text-white/80 hover:text-white transition-colors"
+                className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -38,8 +38,8 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-            <div className="space-y-6 text-gray-700">
+          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div className="space-y-4 sm:space-y-6 text-gray-700">
               {/* Important Notice */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex gap-3">
@@ -133,21 +133,21 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onAccept, onDecline }) 
 
           {/* Footer Actions */}
           <div className="border-t border-gray-200 p-6 bg-gray-50">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={onDecline}
-                className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors min-h-[48px] flex items-center justify-center"
               >
                 Decline
               </button>
               <button
                 onClick={onAccept}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl min-h-[48px] flex items-center justify-center"
               >
                 I Agree and Accept Terms
               </button>
             </div>
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-xs text-gray-500 text-center mt-4 px-2">
               You must accept these terms to proceed. By accepting, you confirm that you have read, 
               understood, and agree to be bound by these terms and conditions.
             </p>
