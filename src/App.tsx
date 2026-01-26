@@ -24,7 +24,6 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import UserDashboardComplete from './components/UserDashboardComplete';
 import TirzepatideLanding from './components/TirzepatideLanding';
-import LandingPage from './components/LandingPage';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 

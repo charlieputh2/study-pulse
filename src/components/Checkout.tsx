@@ -373,7 +373,20 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }): R
       return;
     }
     
-    if (!isLoggedIn) {
+    // Enhanced login check - don't show modal if user is logged in
+    const hasLocalUser = localStorage.getItem('studyPulseUser') || sessionStorage.getItem('peptide_admin_auth');
+    const isUserLoggedIn = isLoggedIn || (user && user.email) || hasLocalUser;
+    
+    // Debug logging
+    console.log('🔍 Checkout login check:', {
+      isLoggedIn,
+      user: !!user,
+      userEmail: user?.email,
+      hasLocalUser,
+      shouldShowModal: !isUserLoggedIn
+    });
+    
+    if (!isUserLoggedIn) {
       // Show professional account creation/login modal
       const result = await Swal.fire({
         title: 'Create Account for Better Experience',
