@@ -316,7 +316,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', upload.single('photo'), async (req, res) => {
+router.put('/profile', multerErrorHandler, async (req, res) => {
   try {
     const userId = req.session.user?.userId;
     
@@ -454,7 +454,7 @@ router.get('/auth-status', (req, res) => {
 });
 
 // Upload avatar only
-router.post('/upload-avatar', upload.single('photo'), async (req, res) => {
+router.post('/upload-avatar', multerErrorHandler, async (req, res) => {
   try {
     const userId = req.session.user?.userId;
     

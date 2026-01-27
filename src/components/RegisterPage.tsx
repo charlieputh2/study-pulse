@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2, Shield, Sparkles, Heart, Star, Camera, Upload, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { useAuth } from '../hooks/useAuth';
 import UniqueHeader from './UniqueHeader';
 import UniqueFooter from './UniqueFooter';
 
@@ -13,14 +13,13 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [photo, setPhoto] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   const navigate = useNavigate();
+  const { register, loading } = useAuth();
 
   // Photo handling functions
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,33 +27,13 @@ const RegisterPage: React.FC = () => {
     if (file) {
       // Validate file size (5MB)
       if (file.size > 5 * 1024 * 1024) {
-        Swal.fire({
-          icon: 'error',
-          title: 'File Too Large',
-          text: 'Please select an image under 5MB',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          background: '#fee2e2',
-          iconColor: '#ef4444'
-        });
+        setError('Please select an image under 5MB');
         return;
       }
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Invalid File Type',
-          text: 'Please select an image file (JPG, PNG, or GIF)',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          background: '#fee2e2',
-          iconColor: '#ef4444'
-        });
+        setError('Please select an image file (JPG, PNG, or GIF)');
         return;
       }
 
@@ -62,14 +41,12 @@ const RegisterPage: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         setPhotoPreview(e.target?.result as string);
-        setPhoto(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const removePhoto = () => {
-    setPhoto(null);
     setPhotoPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -99,12 +76,10 @@ const RegisterPage: React.FC = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     // Validation
     if (!email || !password || !confirmPassword || !fullName) {
       setError('Please fill all required fields');
-      setIsLoading(false);
       return;
     }
 
@@ -112,212 +87,51 @@ const RegisterPage: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
-      setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      setIsLoading(false);
       return;
     }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters long');
-      setIsLoading(false);
       return;
     }
 
     if (!acceptTerms) {
       setError('Please accept the terms and conditions');
-      setIsLoading(false);
       return;
     }
 
     try {
-      // Send as JSON to avoid FormData issues
-      const userData = {
-        fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        password: password,
-        confirmPassword: confirmPassword,
-        acceptTerms: acceptTerms.toString()
-      };
+      const result = await register(email, password, fullName);
       
-      console.log('Sending user data:', { ...userData, password: '***', confirmPassword: '***' });
-
-      // Show loading notification
-      Swal.fire({
-        title: 'Creating Account...',
-        html: `
-          <div style="text-align: center;">
-            <div class="loader"></div>
-            <p style="color: #6b7280; margin-top: 1rem;">Setting up your account...</p>
-            <div style="margin-top: 1rem; font-size: 0.875rem; color: #64748b;">
-              ${photo ? '<p>📷 Uploading profile photo...</p>' : '<p>📝 Processing your information...</p>'}
-            </div>
-          </div>
-        `,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => Swal.showLoading(),
-        backdrop: 'rgba(0,0,0,0.5)',
-      });
-
-      // API call to register user with timeout and retry
-      let retryCount = 0;
-      const maxRetries = 2;
-      
-      while (retryCount <= maxRetries) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-          
-          // Use Render backend for production, localhost for development
-          const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
-          const apiUrl = isDevelopment 
-            ? '/api/users/register' 
-            : 'https://study-pulse-b7du.onrender.com/api/users/register';
-          
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          console.log('Registration response status:', response.status);
-          console.log('Registration response headers:', response.headers);
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Registration error response:', errorText);
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-          }
-
-          let data;
-          try {
-            data = await response.json();
-          } catch (jsonError) {
-            console.error('JSON parsing error:', jsonError);
-            throw new Error('Invalid server response');
-          }
-
-          if (data.success) {
-            // Store user in localStorage
-            localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
-            
-            // Send welcome email in background (don't wait for it)
-            // Email is now handled asynchronously in the backend to avoid blocking registration
-
-            // Show success notification
-            await Swal.fire({
-              icon: 'success',
-              title: 'Account Created Successfully',
-              html: `
-                <div style="text-align: center; animation: fadeIn 0.5s;">
-                  <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                    Welcome to Study Pulse, <strong style="color: #10b981;">${fullName}</strong>!
-                  </p>
-                  <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
-                    <p style="color: #059669; font-size: 0.9rem;"> Account created successfully</p>
-                    <p style="color: #059669; font-size: 0.9rem;"> Welcome email will be sent shortly</p>
-                    <p style="color: #059669; font-size: 0.9rem;"> Ready to shop</p>
-                    ${photo ? '<p style="color: #059669; font-size: 0.9rem;"> Profile photo uploaded</p>' : ''}
-                  </div>
-                  <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to login page...</p>
-                </div>
-              `,
-              timer: 2000,
-              timerProgressBar: true,
-              confirmButtonColor: '#10b981',
-              backdrop: 'rgba(0,0,0,0.5)',
-              showClass: {
-                popup: 'animate__animated animate__fadeInDown'
-              },
-              hideClass: {
-                popup: 'animate__animated animate__fadeOutUp'
-              }
-            });
-            
-            // Navigate to login page after successful registration
-            setTimeout(() => navigate('/login'), 2000);
-            break; // Exit retry loop on success
-          } else {
-            setError(data.message || 'Registration failed');
-            await Swal.fire({
-              icon: 'error',
-              title: ' Registration Failed',
-              text: data.message || 'Unable to create your account. Please try again.',
-              confirmButtonColor: '#ef4444',
-              backdrop: 'rgba(0,0,0,0.5)',
-              showClass: {
-                popup: 'animate__animated animate__shakeX'
-              }
-            });
-            break; // Exit retry loop on failure
-          }
-        } catch (fetchError: any) {
-          console.error('Fetch error (attempt', retryCount + 1, '):', fetchError);
-          if (retryCount === maxRetries) {
-            // Final attempt failed, show error
-            Swal.close();
-            let errorMessage = 'Registration failed. Please try again.';
-            
-            if (fetchError?.name === 'AbortError') {
-              errorMessage = 'Request timed out. Please check your connection and try again.';
-            } else if (fetchError?.message && fetchError.message.includes('Failed to fetch')) {
-              errorMessage = 'Network error. Please check your internet connection.';
-            } else if (fetchError?.message) {
-              errorMessage = fetchError.message;
-            }
-            
-            setError(errorMessage);
-            await Swal.fire({
-              icon: 'error',
-              title: ' Error',
-              text: errorMessage,
-              confirmButtonColor: '#ef4444',
-              backdrop: 'rgba(0,0,0,0.5)',
-            });
-          } else {
-            // Retry after delay
-            retryCount++;
-            if (retryCount <= maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            }
-          }
-        }
+      if (result.success) {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+        notification.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L21 7"/>
+          </svg>
+          <span>Account created successfully! Welcome to Study Pulse, ${fullName}!</span>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 3000);
+        
+        // Navigate to login page after successful registration
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError(result.error || 'Registration failed');
       }
     } catch (error: any) {
       console.error('Registration error:', error);
-      Swal.close();
-      
-      let errorMessage = 'Registration failed. Please try again.';
-      
-      if (error.name === 'AbortError') {
-        errorMessage = 'Request timed out. Please check your connection and try again.';
-      } else if (error.message && error.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      await Swal.fire({
-        icon: 'error',
-        title: '❌ Error',
-        text: errorMessage,
-        confirmButtonColor: '#ef4444',
-        backdrop: 'rgba(0,0,0,0.5)',
-      });
-    } finally {
-      setIsLoading(false);
+      setError('Registration failed. Please try again.');
     }
   };
 
@@ -595,10 +409,10 @@ const RegisterPage: React.FC = () => {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] text-lg"
               >
-                {isLoading ? (
+                {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Creating Account...

@@ -59,25 +59,40 @@ const LabTests: React.FC = () => {
 
   // Real-time updates
   useEffect(() => {
-    const subscription = labTestService.subscribeToLabTests((payload) => {
-      console.log('Lab test update received:', payload);
-      
-      // Refresh data when changes occur
-      fetchLabTests();
-      
-      // Show notification for real-time updates
-      if (payload.eventType === 'INSERT') {
-        const newTest = payload.new as LabTest;
-        // You could add a toast notification here
-        console.log('New lab test added:', newTest.name);
-      } else if (payload.eventType === 'UPDATE') {
-        const updatedTest = payload.new as LabTest;
-        console.log('Lab test updated:', updatedTest.name);
+    let subscription: any = null;
+    
+    const setupSubscription = async () => {
+      try {
+        subscription = await labTestService.subscribeToLabTests((payload) => {
+          console.log('Lab test update received:', payload);
+          
+          // Refresh data when changes occur
+          fetchLabTests();
+          
+          // Show notification for real-time updates
+          if (payload.eventType === 'INSERT') {
+            const newTest = payload.new as LabTest;
+            console.log('New lab test added:', newTest.name);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedTest = payload.new as LabTest;
+            console.log('Lab test updated:', updatedTest.name);
+          }
+        });
+      } catch (error) {
+        console.error('Error setting up realtime subscription:', error);
       }
-    });
+    };
+
+    setupSubscription();
 
     return () => {
-      labTestService.unsubscribeFromLabTests(subscription);
+      if (subscription) {
+        try {
+          labTestService.unsubscribeFromLabTests(subscription);
+        } catch (error) {
+          console.error('Error unsubscribing from realtime:', error);
+        }
+      }
     };
   }, [fetchLabTests]);
 

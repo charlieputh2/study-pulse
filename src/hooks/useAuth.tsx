@@ -7,13 +7,15 @@ interface User {
   full_name?: string;
   phone?: string;
   avatar_url?: string;
+  fullName?: string;
+  photo?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, fullName: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: any }>;
+  register: (email: string, password: string, fullName: string, phone?: string) => Promise<{ success: boolean; error?: string; user?: any }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>;
 }
@@ -37,7 +39,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
+    // Check for existing session in localStorage first
+    const savedUser = localStorage.getItem('studyPulseUser');
+    if (savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+        setUser({
+          id: user.id || user.email,
+          email: user.email,
+          full_name: user.fullName || user.full_name || '',
+          phone: user.phone || '',
+          avatar_url: user.photo || user.avatar_url || '',
+          fullName: user.fullName,
+          photo: user.photo
+        });
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('studyPulseUser');
+      }
+    }
+
+    // Get initial session from Supabase
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -49,13 +73,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             .eq('email', session.user.email!)
             .single();
 
-          setUser({
+          const userData = {
             id: session.user.id,
             email: session.user.email!,
             full_name: profile?.first_name || '',
             phone: profile?.phone || '',
-            avatar_url: profile?.avatar_url || ''
-          });
+            avatar_url: profile?.avatar_url || '',
+            fullName: profile?.first_name || ''
+          };
+          
+          setUser(userData);
+          localStorage.setItem('studyPulseUser', JSON.stringify(userData));
         }
       } catch (error) {
         console.error('Error getting initial session:', error);
@@ -68,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (session?.user) {
           // Get user profile
           const { data: profile } = await supabase
@@ -77,15 +105,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             .eq('email', session.user.email!)
             .single();
 
-          setUser({
+          const userData = {
             id: session.user.id,
             email: session.user.email!,
             full_name: profile?.first_name || '',
             phone: profile?.phone || '',
-            avatar_url: profile?.avatar_url || ''
-          });
+            avatar_url: profile?.avatar_url || '',
+            fullName: profile?.first_name || ''
+          };
+          
+          setUser(userData);
+          localStorage.setItem('studyPulseUser', JSON.stringify(userData));
         } else {
           setUser(null);
+          localStorage.removeItem('studyPulseUser');
         }
         setLoading(false);
       }
@@ -96,6 +129,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      setLoading(true);
+      
+      // Try backend API first
+      try {
+        const response = await fetch('/api/users/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Store user in localStorage for compatibility
+            localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
+            
+            setUser({
+              id: data.user.id || data.user.email,
+              email: data.user.email,
+              full_name: data.user.fullName || data.user.full_name || '',
+              phone: data.user.phone || '',
+              avatar_url: data.user.photo || data.user.avatar_url || '',
+              fullName: data.user.fullName,
+              photo: data.user.photo
+            });
+            
+            return { success: true, user: data.user };
+          }
+        }
+      } catch (apiError) {
+        console.log('API login failed, trying Supabase:', apiError);
+      }
+
+      // Fallback to Supabase auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -105,15 +174,84 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, error: error.message };
       }
 
-      return { success: true };
+      if (data.user) {
+        // Get user profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('email', data.user.email!)
+          .single();
+
+        const userData = {
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: profile?.first_name || '',
+          phone: profile?.phone || '',
+          avatar_url: profile?.avatar_url || '',
+          fullName: profile?.first_name || ''
+        };
+        
+        // Store in localStorage for compatibility
+        localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+        setUser(userData);
+        
+        return { success: true, user: userData };
+      }
+
+      return { success: false, error: 'Login failed' };
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, error: 'An unexpected error occurred' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (email: string, password: string, fullName: string, phone?: string) => {
     try {
-      // Sign up user
+      setLoading(true);
+      
+      // Try backend API first
+      try {
+        const response = await fetch('/api/users/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            fullName,
+            phone,
+            confirmPassword: password,
+            acceptTerms: 'true'
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            // Store user in localStorage for compatibility
+            localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
+            
+            setUser({
+              id: data.user.id || data.user.email,
+              email: data.user.email,
+              full_name: data.user.fullName || data.user.full_name || '',
+              phone: data.user.phone || '',
+              avatar_url: data.user.photo || data.user.avatar_url || '',
+              fullName: data.user.fullName,
+              photo: data.user.photo
+            });
+            
+            return { success: true, user: data.user };
+          }
+        }
+      } catch (apiError) {
+        console.log('API registration failed, trying Supabase:', apiError);
+      }
+
+      // Fallback to Supabase auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -137,16 +275,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (profileError) {
           console.error('Error creating user profile:', profileError);
         }
+
+        const userData = {
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: fullName,
+          phone: phone || '',
+          avatar_url: '',
+          fullName: fullName
+        };
+        
+        // Store in localStorage for compatibility
+        localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+        setUser(userData);
+        
+        return { success: true, user: userData };
       }
 
-      return { success: true };
+      return { success: false, error: 'Registration failed' };
     } catch (error) {
+      console.error('Registration error:', error);
       return { success: false, error: 'An unexpected error occurred' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      // Clear localStorage
+      localStorage.removeItem('studyPulseUser');
+      
+      // Try backend logout
+      try {
+        await fetch('/api/users/logout', {
+          method: 'POST',
+        });
+      } catch (apiError) {
+        console.log('API logout failed, trying Supabase:', apiError);
+      }
+      
+      // Supabase logout
       await supabase.auth.signOut();
       setUser(null);
     } catch (error) {

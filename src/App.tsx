@@ -25,6 +25,8 @@ import RegisterPage from './components/RegisterPage';
 import UserDashboardComplete from './components/UserDashboardComplete';
 import LabTests from './components/LabTests';
 import TirzepatideLanding from './components/TirzepatideLanding';
+import TirzepatideLandingPage from './components/TirzepatideLandingPage';
+import GeneralLanding from './components/GeneralLanding';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -128,7 +130,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<TirzepatideLanding />} />
+          <Route path="/" element={<GeneralLanding />} />
           <Route path="/landing" element={<TirzepatideLanding />} />
           <Route path="/shop" element={<MainApp />} />
           <Route path="/login" element={<LoginPage />} />
@@ -148,7 +150,7 @@ function App() {
           <Route path="/lab-tests" element={<LabTests />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/products" element={<ProductsPage />} />
-          <Route path="/tirzepatide" element={<TirzepatideLanding />} />
+          <Route path="/tirzepatide" element={<TirzepatideLandingPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<UserDashboardComplete />} />
         </Routes>

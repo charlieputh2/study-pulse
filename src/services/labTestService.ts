@@ -211,6 +211,10 @@ class LabTestService {
   }
 
   async unsubscribeFromLabTests(subscription: any) {
+    if (subscription && subscription.unsubscribe) {
+      return subscription.unsubscribe();
+    }
+    // Fallback for older Supabase versions
     return supabase.removeChannel(subscription);
   }
 }

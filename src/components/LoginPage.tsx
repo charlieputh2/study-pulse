@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader2, Shield, Sparkles, Heart, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import { useAuth } from '../hooks/useAuth';
 import UniqueHeader from './UniqueHeader';
 import UniqueFooter from './UniqueFooter';
 import PasswordRecovery from './PasswordRecovery';
@@ -10,12 +10,12 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   const navigate = useNavigate();
+  const { login, loading } = useAuth();
 
   // Check if user is already logged in - redirect to dashboard
   useEffect(() => {
@@ -30,11 +30,9 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
 
     if (!email || !password) {
       setError('Please fill all required fields');
-      setIsLoading(false);
       return;
     }
 
@@ -42,135 +40,35 @@ const LoginPage: React.FC = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
-      setIsLoading(false);
       return;
     }
 
     try {
-      // Show loading notification
-      await Swal.fire({
-        title: 'Authenticating...',
-        html: `
-          <div style="text-align: center;">
-            <div class="loader"></div>
-            <p style="color: #6b7280; margin-top: 1rem;">Verifying your credentials...</p>
-          </div>
-        `,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        showConfirmButton: false,
-        didOpen: () => Swal.showLoading(),
-        backdrop: 'rgba(0,0,0,0.5)',
-      });
-
-      // API call to login user with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const result = await login(email, password);
       
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password: password,
-          rememberMe: rememberMe
-        }),
-        signal: controller.signal
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error('JSON parsing error:', jsonError);
-        throw new Error('Invalid server response');
-      }
-
-      if (data.success) {
-        // Store user in localStorage
-        localStorage.setItem('studyPulseUser', JSON.stringify(data.user));
+      if (result.success) {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+        notification.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L21 7"/>
+          </svg>
+          <span>Login successful! Welcome back, ${result.user?.fullName || result.user?.email}!</span>
+        `;
+        document.body.appendChild(notification);
         
-        // Close loading and show success
-        Swal.close();
-        
-        // Show success notification with animation
-        await Swal.fire({
-          icon: 'success',
-          title: 'Login Successful',
-          html: `
-            <div style="text-align: center; animation: fadeIn 0.5s;">
-              <p style="color: #374151; margin-bottom: 0.5rem; font-size: 1.1rem;">
-                Welcome back, <strong style="color: #3b82f6;">${data.user.fullName}</strong>!
-              </p>
-              <div style="background: #f0fdf4; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
-                <p style="color: #059669; font-size: 0.9rem;">✓ Successfully authenticated</p>
-                <p style="color: #059669; font-size: 0.9rem;">✓ Session secured</p>
-                <p style="color: #059669; font-size: 0.9rem;">✓ Ready to explore</p>
-              </div>
-              <p style="color: #6b7280; font-size: 0.875rem;">Redirecting to your dashboard...</p>
-            </div>
-          `,
-          timer: 3000,
-          timerProgressBar: true,
-          confirmButtonColor: '#10b981',
-          backdrop: 'rgba(0,0,0,0.5)',
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown'
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp'
-          }
-        });
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 3000);
         
         navigate('/dashboard');
       } else {
-        setError(data.message || 'Login failed');
-        await Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: data.message || 'Unable to authenticate. Please check your credentials and try again.',
-          confirmButtonColor: '#ef4444',
-          backdrop: 'rgba(0,0,0,0.5)',
-          showClass: {
-            popup: 'animate__animated animate__shakeX'
-          }
-        });
+        setError(result.error || 'Login failed');
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      Swal.close();
-      
-      let errorMessage = 'Unable to authenticate. Please check your credentials and try again.';
-      
-      if (error.name === 'AbortError') {
-        errorMessage = 'Request timed out. Please check your connection and try again.';
-      } else if (error instanceof TypeError) {
-        errorMessage = 'Network error. Please check your internet connection.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
-      await Swal.fire({
-        icon: 'error',
-        title: '❌ Login Failed',
-        text: errorMessage,
-        confirmButtonColor: '#ef4444',
-        backdrop: 'rgba(0,0,0,0.5)',
-        showClass: {
-          popup: 'animate__animated animate__shakeX'
-        }
-      });
       setError('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -298,10 +196,10 @@ const LoginPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loading}
                     className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] text-lg"
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                         Signing In...
