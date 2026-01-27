@@ -27,6 +27,7 @@ import LabTests from './components/LabTests';
 import TirzepatideLanding from './components/TirzepatideLanding';
 import TirzepatideLandingPage from './components/TirzepatideLandingPage';
 import GeneralLanding from './components/GeneralLanding';
+import ResearchStudies from './components/ResearchStudies';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
 
@@ -145,6 +146,7 @@ function App() {
           <Route path="/articles/:id" element={<ArticleDetail />} />
           <Route path="/test-connection" element={<TestConnection />} />
           <Route path="/research" element={<Research />} />
+          <Route path="/research/studies" element={<ResearchStudies />} />
           <Route path="/protocols" element={<Protocols />} />
           <Route path="/research/protocols" element={<Protocols />} />
           <Route path="/lab-tests" element={<LabTests />} />
