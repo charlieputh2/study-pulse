@@ -23,6 +23,7 @@ import ProductsPage from './components/ProductsPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import UserDashboardComplete from './components/UserDashboardComplete';
+import LabTests from './components/LabTests';
 import TirzepatideLanding from './components/TirzepatideLanding';
 import { useMenu } from './hooks/useMenu';
 // import { useCOAPageSetting } from './hooks/useCOAPageSetting';
@@ -137,11 +138,14 @@ function App() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/calculator" element={<PeptideCalculator />} />
           <Route path="/track-order" element={<OrderTrackingPage />} />
+          <Route path="/tracking" element={<OrderTrackingPage />} />
           <Route path="/smart-guide" element={<SmartGuide />} />
           <Route path="/articles/:id" element={<ArticleDetail />} />
           <Route path="/test-connection" element={<TestConnection />} />
           <Route path="/research" element={<Research />} />
           <Route path="/protocols" element={<Protocols />} />
+          <Route path="/research/protocols" element={<Protocols />} />
+          <Route path="/lab-tests" element={<LabTests />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/tirzepatide" element={<TirzepatideLanding />} />

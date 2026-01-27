@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Truck, Calendar, ClipboardList, Search, Bell, ChevronDown, Sparkles, Zap, Shield, User, Beaker, FileText, Calculator, TestTube, BookOpen } from 'lucide-react';
+import { ShoppingCart, Menu, X, Truck, ClipboardList, Search, Bell, ChevronDown, Sparkles, Zap, Shield, User, Beaker, FileText, Calculator, TestTube, BookOpen } from 'lucide-react';
 
 interface HeaderProps {
   cartItemsCount: number;
@@ -172,16 +172,6 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                 {/* Dropdown Content */}
                 <div className="absolute top-full left-0 mt-2 w-64 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2">
                   <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200 p-4 space-y-2">
-                    <Link
-                      to="/appointments"
-                      className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
-                    >
-                      <Calendar className="w-5 h-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium">Appointments</div>
-                        <div className="text-xs text-gray-500">Schedule consultation</div>
-                      </div>
-                    </Link>
                     <Link
                       to="/orders"
                       className="flex items-center gap-3 p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-[#1d4ed8] transition-all"
@@ -448,19 +438,6 @@ const UniqueHeader: React.FC<HeaderProps> = ({ cartItemsCount, onCartClick, onMe
                   </div>
                 </div>
 
-                <Link
-                  to="/appointments"
-                  className="flex items-center gap-4 p-4 rounded-2xl text-blue-200 hover:bg-white/10 hover:text-white transition-all group"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Calendar className="w-5 h-5 text-green-400" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-white">Appointments</div>
-                    <div className="text-xs text-blue-300">Book consultation</div>
-                  </div>
-                </Link>
 
                 <Link
                   to="/orders"
