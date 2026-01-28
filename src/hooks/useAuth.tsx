@@ -165,13 +165,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Fallback to Supabase auth
-      const { data, error } = await supabase.auth.signInWithPassword({
+      let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        // If error is about email confirmation, try to bypass it
+        if (error.message.includes('Email not confirmed')) {
+          // Try to get the user and auto-confirm them
+          const { data: userData } = await supabase.auth.getUser();
+          if (userData.user) {
+            await supabase.auth.updateUser({
+              data: { email_confirmed: true }
+            });
+            // Retry login
+            const retryResult = await supabase.auth.signInWithPassword({ email, password });
+            if (!retryResult.error && retryResult.data.user) {
+              data = retryResult.data;
+              error = null;
+            }
+          }
+        }
+        
+        if (error) {
+          return { success: false, error: error.message };
+        }
       }
 
       if (data.user) {
@@ -255,7 +274,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: undefined,
+          data: {
+            full_name: fullName,
+            phone: phone || ''
+          }
+        }
       });
+
+      // Auto-confirm the user to bypass email verification
+      if (data.user && !error) {
+        await supabase.auth.updateUser({
+          data: { 
+            email_confirmed: true,
+            full_name: fullName,
+            phone: phone || ''
+          }
+        });
+      }
 
       if (error) {
         return { success: false, error: error.message };
@@ -274,6 +311,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         if (profileError) {
           console.error('Error creating user profile:', profileError);
+        }
+
+        // Auto-confirm and sign in the user immediately to bypass email confirmation
+        try {
+          // First try to update user to confirm email
+          await supabase.auth.updateUser({
+            data: { email_confirmed: true }
+          });
+          
+          // Then sign in immediately
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (!signInError && signInData.user) {
+            // Use the signed-in user data
+            const userData = {
+              id: signInData.user.id,
+              email: signInData.user.email!,
+              full_name: fullName,
+              phone: phone || '',
+              avatar_url: '',
+              fullName: fullName
+            };
+            
+            // Store in localStorage for compatibility
+            localStorage.setItem('studyPulseUser', JSON.stringify(userData));
+            setUser(userData);
+            
+            return { success: true, user: userData };
+          }
+        } catch (confirmError) {
+          console.warn('Auto-confirmation failed, but registration succeeded:', confirmError);
         }
 
         const userData = {

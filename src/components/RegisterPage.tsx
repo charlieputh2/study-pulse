@@ -124,8 +124,8 @@ const RegisterPage: React.FC = () => {
           document.body.removeChild(notification);
         }, 3000);
         
-        // Navigate to login page after successful registration
-        setTimeout(() => navigate('/login'), 2000);
+        // Navigate to dashboard immediately after successful registration
+        setTimeout(() => navigate('/dashboard'), 2000);
       } else {
         setError(result.error || 'Registration failed');
       }
